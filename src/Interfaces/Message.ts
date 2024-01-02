@@ -1,0 +1,10 @@
+import { RequestType } from "./RequestType";
+
+export interface Message {
+    CommuniqueType: RequestType;
+    Header: {
+        ClientTag: string;
+        Url: string;
+    };
+    Body?: Record<string, unknown>;
+}
