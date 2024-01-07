@@ -6,6 +6,7 @@ import { v4 } from "uuid";
 import { BodyType } from "./Interfaces/BodyType";
 import { BufferedResponse } from "./Interfaces/BufferedResponse";
 import { ClientSettingDefinition } from "./Interfaces/ClientSettingDefinition";
+import { ConnectionEvents } from "./ConnectionEvents";
 import { ExceptionDetail } from "./Interfaces/ExceptionDetail";
 import { Href } from "./Interfaces/Href";
 import { InflightMessage } from "./Interfaces/InflightMessage";
@@ -19,7 +20,7 @@ import { TaggedResponse } from "./Interfaces/TaggedResponse";
 
 const log = Logger.get("Conection");
 
-export class Conection extends BufferedResponse {
+export class Conection extends BufferedResponse<ConnectionEvents> {
     private connection?: TLSSocket;
 
     private readonly host: string;
@@ -35,8 +36,6 @@ export class Conection extends BufferedResponse {
         this.host = host;
         this.port = port;
         this.secureContext = secureContext;
-
-        this.on("Response", this.onResponse());
     }
 
     public connect(): Promise<void> {
@@ -219,7 +218,7 @@ export class Conection extends BufferedResponse {
 
     private onSocketData(): (data: Buffer) => void {
         return (data: Buffer): void => {
-            this.parse(data);
+            this.parse(data, this.onResponse());
         };
     }
 

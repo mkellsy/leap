@@ -1,12 +1,11 @@
-import { EventEmitter } from "@mkellsy/event-emitter";
+import { EventEmitter, EventListener } from "@mkellsy/event-emitter";
 
-import { ConnectionEvents } from "../ConnectionEvents";
 import { Response } from "./Response";
 
-export class BufferedResponse extends EventEmitter<ConnectionEvents> {
+export class BufferedResponse<MAP extends EventListener> extends EventEmitter<MAP> {
     private buffer: string = "";
 
-    public parse(data: Buffer): void {
+    public parse(data: Buffer, callback: (response: Response) => void): void {
         const response = this.buffer + data.toString();
         const lines: string[] = response.split(/\r?\n/);
 
@@ -19,7 +18,7 @@ export class BufferedResponse extends EventEmitter<ConnectionEvents> {
         this.buffer = lines[lines.length - 1] || "";
 
         for (const line of lines.slice(0, lines.length - 1)) {
-            this.emit("Response", Response.parse(line));
+            callback(Response.parse(line));
         }
     }
 }

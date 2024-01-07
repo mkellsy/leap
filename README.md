@@ -1,5 +1,5 @@
 # LEAP
-This library is an implementation of Lutron's LEAP protocol.
+Implementation of Lutron's LEAP protocol for TypeScript.
 
 This exposes a method to interact with LEAP enabled devices. This requires the client to impliment the system that needs to be intergrated.
 
