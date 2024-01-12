@@ -3,24 +3,24 @@ import Logger from "js-logger";
 import { connect, SecureContext, TLSSocket } from "tls";
 import { v4 } from "uuid";
 
-import { BodyType } from "./Interfaces/BodyType";
-import { BufferedResponse } from "./Interfaces/BufferedResponse";
-import { ClientSettingDefinition } from "./Interfaces/ClientSettingDefinition";
+import { BodyType } from "../Interfaces/BodyType";
+import { BufferedResponse } from "../Interfaces/BufferedResponse";
+import { ClientSettingDefinition } from "../Interfaces/ClientSettingDefinition";
 import { ConnectionEvents } from "./ConnectionEvents";
-import { ExceptionDetail } from "./Interfaces/ExceptionDetail";
-import { Href } from "./Interfaces/Href";
-import { InflightMessage } from "./Interfaces/InflightMessage";
-import { OneClientSettingDefinition } from "./Interfaces/ClientSettingDefinition";
-import { OnePingResponse } from "./Interfaces/PingResponseDefinition";
-import { Message } from "./Interfaces/Message";
-import { PingResponseDefinition } from "./Interfaces/PingResponseDefinition";
-import { Response } from "./Interfaces/Response";
-import { RequestType } from "./Interfaces/RequestType";
-import { TaggedResponse } from "./Interfaces/TaggedResponse";
+import { ExceptionDetail } from "../Interfaces/ExceptionDetail";
+import { Href } from "../Interfaces/Href";
+import { InflightMessage } from "../Interfaces/InflightMessage";
+import { OneClientSettingDefinition } from "../Interfaces/ClientSettingDefinition";
+import { OnePingResponse } from "../Interfaces/PingResponseDefinition";
+import { Message } from "../Interfaces/Message";
+import { PingResponseDefinition } from "../Interfaces/PingResponseDefinition";
+import { Response } from "../Interfaces/Response";
+import { RequestType } from "../Interfaces/RequestType";
+import { TaggedResponse } from "../Interfaces/TaggedResponse";
 
-const log = Logger.get("Conection");
+const log = Logger.get("Connection");
 
-export class Conection extends BufferedResponse<ConnectionEvents> {
+export class Connection extends BufferedResponse<ConnectionEvents> {
     private connection?: TLSSocket;
 
     private readonly host: string;

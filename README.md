@@ -5,7 +5,7 @@ This exposes a method to interact with LEAP enabled devices. This requires the c
 
 ## API
 ```js
-import { Conection, Locator, Pairing } from "@mkellsy/leap";
+import { Connection, Locator, Pairing } from "@mkellsy/leap";
 
 const locator = new Locator();
 

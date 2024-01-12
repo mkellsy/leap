@@ -1,4 +1,4 @@
-import { Response } from "./Interfaces/Response";
+import { Response } from "../Interfaces/Response";
 
 export type ConnectionEvents = {
     Disconnected: () => void;

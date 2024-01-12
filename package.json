@@ -1,5 +1,5 @@
 {
-    "version": "1.1.1",
+    "version": "1.2.0",
     "name": "@mkellsy/leap",
     "displayName": "LEAP",
     "description": "Lutron LEAP client",
@@ -15,7 +15,7 @@
         "build": "tsc --project tsconfig.json"
     },
     "dependencies": {
-        "@mkellsy/event-emitter": "^1.1.2",
+        "@mkellsy/event-emitter": "^1.2.0",
         "ip-address": "^9.0.5",
         "js-logger": "^1.6.1",
         "tinkerhub-mdns": "^0.5.1",

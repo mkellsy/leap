@@ -5,9 +5,9 @@ import { SecureContext, TLSSocket, connect, createSecureContext } from "tls";
 
 import { PairingEvents } from "./PairingEvents";
 
-import Athority from "./Certificates/Athority";
-import Certificate from "./Certificates/Certificate";
-import Key from "./Certificates/Key";
+import Athority from "../Certificates/Athority";
+import Certificate from "../Certificates/Certificate";
+import Key from "../Certificates/Key";
 
 const log = Logger.get("Pairing");
 
