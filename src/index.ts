@@ -1,6 +1,3 @@
-import { Locator } from "./Modules/Locator";
-import { Pairing } from "./Modules/Pairing";
-
 export * from "./Interfaces/AdvancedToggleProperties";
 export * from "./Interfaces/AffectedZone";
 export * from "./Interfaces/AreaDefinition";
@@ -54,5 +51,4 @@ export * from "./Interfaces/ZoneDefinition";
 export * from "./Interfaces/ZoneStatus";
 
 export { Connection } from "./Modules/Connection";
-export { Locator } from "./Modules/Locator";
 export { Pairing } from "./Modules/Pairing";

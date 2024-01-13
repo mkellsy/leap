@@ -1,51 +1,32 @@
-import Logger from "js-logger";
+import * as Logger from "js-logger";
 
 import { EventEmitter } from "@mkellsy/event-emitter";
-import { SecureContext, TLSSocket, connect, createSecureContext } from "tls";
+import { SecureContext, TLSSocket, connect } from "tls";
 
 import { PairingEvents } from "./PairingEvents";
-
-import Athority from "../Certificates/Athority";
-import Certificate from "../Certificates/Certificate";
-import Key from "../Certificates/Key";
+import { Socket } from "./Socket";
 
 const log = Logger.get("Pairing");
 
 export class Pairing extends EventEmitter<PairingEvents> {
-    private connection?: TLSSocket;
+    private socket: Socket;
 
-    private readonly host: string;
-    private readonly port: number;
-    private readonly secureContext: SecureContext;
-
-    constructor(host: string, port: number) {
+    constructor(host: string, port: number, secureContext: SecureContext) {
         super();
 
-        this.host = host;
-        this.port = port;
+        this.socket = new Socket(host, port, secureContext);
 
-        this.secureContext = createSecureContext({
-            ca: Athority,
-            key: Key,
-            cert: Certificate,
-        });
+        this.socket.on("Error", this.onSocketError());
+        this.socket.on("Close", this.onSocketClose());
+        this.socket.on("Data", this.onSocketData());
     }
 
-    public connect(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this.connection != null) {
-                return resolve();
-            }
+    public async connect(): Promise<void> {
+        await this.socket.connect();
+    }
 
-            const connection = connect(this.port, this.host, {
-                secureContext: this.secureContext,
-                secureProtocol: "TLSv1_2_method",
-                rejectUnauthorized: false,
-            });
-
-            connection.once("secureConnect", this.onSecureConnect(resolve, reject, connection));
-            connection.once("error", reject);
-        });
+    public close() {
+        this.socket?.close();
     }
 
     public async pair(csr: string) {
@@ -68,21 +49,7 @@ export class Pairing extends EventEmitter<PairingEvents> {
             },
         };
 
-        this.connection?.write(`${JSON.stringify(message)}\n`);
-    }
-
-    private onSecureConnect(resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void, connection: TLSSocket): () => void {
-        return (): void => {
-            this.connection = connection;
-
-            connection.off("error", reject);
-
-            connection.once("error", this.onSocketError());
-            connection.on("close", this.onSocketClose());
-            connection.on("data", this.onSocketData());
-
-            resolve();
-        };
+        this.socket.write(message);
     }
 
     private onSocketData(): (data: Buffer) => void {
@@ -93,8 +60,6 @@ export class Pairing extends EventEmitter<PairingEvents> {
 
     private onSocketClose(): () => void {
         return (): void => {
-            this.connection = undefined;
-
             this.emit("Disconnected");
         };
     }

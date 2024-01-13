@@ -6,6 +6,7 @@
         "declaration": true,
         "declarationMap": true,
         "sourceMap": true,
+        "allowSyntheticDefaultImports": true,
         "outDir": "./lib",
         "rootDir": "./src",
         "strict": true

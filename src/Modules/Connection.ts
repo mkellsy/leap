@@ -1,6 +1,6 @@
-import Logger from "js-logger";
+import * as Logger from "js-logger";
 
-import { connect, SecureContext, TLSSocket } from "tls";
+import { SecureContext } from "tls";
 import { v4 } from "uuid";
 
 import { BodyType } from "../Interfaces/BodyType";
@@ -10,22 +10,19 @@ import { ConnectionEvents } from "./ConnectionEvents";
 import { ExceptionDetail } from "../Interfaces/ExceptionDetail";
 import { Href } from "../Interfaces/Href";
 import { InflightMessage } from "../Interfaces/InflightMessage";
+import { Message } from "../Interfaces/Message";
 import { OneClientSettingDefinition } from "../Interfaces/ClientSettingDefinition";
 import { OnePingResponse } from "../Interfaces/PingResponseDefinition";
-import { Message } from "../Interfaces/Message";
 import { PingResponseDefinition } from "../Interfaces/PingResponseDefinition";
 import { Response } from "../Interfaces/Response";
 import { RequestType } from "../Interfaces/RequestType";
+import { Socket } from "./Socket";
 import { TaggedResponse } from "../Interfaces/TaggedResponse";
 
 const log = Logger.get("Connection");
 
 export class Connection extends BufferedResponse<ConnectionEvents> {
-    private connection?: TLSSocket;
-
-    private readonly host: string;
-    private readonly port: number;
-    private readonly secureContext: SecureContext;
+    private socket: Socket;
 
     private requests: Map<string, InflightMessage> = new Map();
     private subscriptions: Map<string, (r: Response) => void> = new Map();
@@ -33,26 +30,16 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
     constructor(host: string, port: number, secureContext: SecureContext) {
         super();
 
-        this.host = host;
-        this.port = port;
-        this.secureContext = secureContext;
+        this.socket = new Socket(host, port, secureContext);
+
+        this.socket.on("Error", this.onSocketError());
+        this.socket.on("Close", this.onSocketClose());
+        this.socket.on("Data", this.onSocketData());
+        this.socket.on("End", this.onSocketEnd());
     }
 
-    public connect(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (this.connection != null) {
-                return resolve();
-            }
-
-            const connection = connect(this.port, this.host, {
-                secureContext: this.secureContext,
-                secureProtocol: "TLSv1_2_method",
-                rejectUnauthorized: false,
-            });
-
-            connection.once("secureConnect", this.onSecureConnect(resolve, reject, connection));
-            connection.once("error", reject);
-        });
+    public async connect(): Promise<void> {
+        await this.socket.connect();
     }
 
     public async ping(): Promise<PingResponseDefinition> {
@@ -63,8 +50,7 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
     }
 
     public close() {
-        this.connection?.end();
-        this.connection = undefined;
+        this.socket?.close();
     }
 
     public drain() {
@@ -114,23 +100,30 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
             this.requests.delete(tag!);
         }
 
-        return new Promise<Response>((resolve, reject) => {
-            const message: Message = {
-                CommuniqueType: requestType,
-                Header: {
-                    ClientTag: tag!,
-                    Url: url,
-                },
-                Body: body,
-            };
+        const message: Message = {
+            CommuniqueType: requestType,
+            Header: {
+                ClientTag: tag!,
+                Url: url,
+            },
+            Body: body,
+        };
 
-            this.connection?.write(`${JSON.stringify(message)}\n`, () => {
-                this.requests.set(tag!, {
-                    message,
-                    resolve,
-                    reject,
-                    timeout: setTimeout(() => reject(new Error(`tag "${tag}" request timeout`)), 5000),
-                });
+        await this.socket.write({
+            CommuniqueType: requestType,
+            Header: {
+                ClientTag: tag!,
+                Url: url,
+            },
+            Body: body,
+        });
+
+        return new Promise<Response>((resolve, reject) => {
+            this.requests.set(tag!, {
+                message,
+                resolve,
+                reject,
+                timeout: setTimeout(() => reject(new Error(`tag "${tag}" request timeout`)), 5000),
             });
         });
     }
@@ -201,21 +194,6 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
         };
     }
 
-    private onSecureConnect(resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void, connection: TLSSocket): () => void {
-        return (): void => {
-            this.connection = connection;
-
-            connection.off("error", reject);
-
-            connection.on("error", this.onSocketError());
-            connection.on("close", this.onSocketClose());
-            connection.on("data", this.onSocketData());
-            connection.on("end", this.onSocketEnd(connection));
-
-            resolve();
-        };
-    }
-
     private onSocketData(): (data: Buffer) => void {
         return (data: Buffer): void => {
             this.parse(data, this.onResponse());
@@ -224,8 +202,6 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
 
     private onSocketClose(): () => void {
         return (): void => {
-            this.connection = undefined;
-
             this.requests.clear();
             this.subscriptions.clear();
 
@@ -233,10 +209,9 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
         };
     }
 
-    private onSocketEnd(connection: TLSSocket): () => void {
+    private onSocketEnd(): () => void {
         return (): void => {
-            connection.end();
-            connection.destroy();
+            this.socket.close();
         };
     }
 

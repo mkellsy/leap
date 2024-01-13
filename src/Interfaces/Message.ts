@@ -1,8 +1,9 @@
 import { RequestType } from "./RequestType";
 
 export interface Message {
-    CommuniqueType: RequestType;
+    CommuniqueType?: RequestType;
     Header: {
+        RequestType?: string;
         ClientTag: string;
         Url: string;
     };
