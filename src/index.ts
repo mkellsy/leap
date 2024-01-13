@@ -27,7 +27,6 @@ export * from "./Interfaces/InflightMessage";
 export * from "./Interfaces/LinkNodeDefinition";
 export * from "./Interfaces/Message";
 export * from "./Interfaces/MessageType";
-export * from "./Interfaces/NetworkSettings";
 export * from "./Interfaces/OccupancyGroupDefinition";
 export * from "./Interfaces/OccupancyGroupStatus";
 export * from "./Interfaces/OccupancyStatus";
