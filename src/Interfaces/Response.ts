@@ -18,16 +18,13 @@ export class Response {
         const payload = JSON.parse(value);
         const status = payload.Header.StatusCode == null ? undefined : ResponseStatus.fromString(payload.Header.StatusCode);
 
-        const header: ResponseHeader = {
+        const header: ResponseHeader = Object.assign({}, payload.Header, {
             StatusCode: status,
-            MessageBodyType: payload?.MessageBodyType as MessageType,
-        };
+            MessageBodyType: payload.Header.MessageBodyType as MessageType,
+        });
 
         return Object.assign(new Response(), payload, {
-            Header: {
-                StatusCode: status,
-                MessageBodyType: payload?.MessageBodyType as MessageType,
-            },
+            Header: header,
             Body: header.MessageBodyType ? Body.parse(header.MessageBodyType, payload.Body) : undefined,
         });
     }

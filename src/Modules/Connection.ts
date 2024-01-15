@@ -1,5 +1,3 @@
-import * as Logger from "js-logger";
-
 import { SecureContext } from "tls";
 import { v4 } from "uuid";
 
@@ -18,8 +16,6 @@ import { Response } from "../Interfaces/Response";
 import { RequestType } from "../Interfaces/RequestType";
 import { Socket } from "./Socket";
 import { TaggedResponse } from "../Interfaces/TaggedResponse";
-
-const log = Logger.get("Connection");
 
 export class Connection extends BufferedResponse<ConnectionEvents> {
     private socket: Socket;
@@ -54,7 +50,7 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
     }
 
     public drain() {
-        this.off("Unsolicited");
+        this.off("Message");
         this.off("Response");
         this.off("Disconnected");
 
@@ -109,21 +105,14 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
             Body: body,
         };
 
-        await this.socket.write({
-            CommuniqueType: requestType,
-            Header: {
-                ClientTag: tag!,
-                Url: url,
-            },
-            Body: body,
-        });
+        await this.socket.write(message);
 
         return new Promise<Response>((resolve, reject) => {
             this.requests.set(tag!, {
                 message,
                 resolve,
                 reject,
-                timeout: setTimeout(() => reject(new Error(`tag "${tag}" request timeout`)), 5000),
+                timeout: setTimeout(() => reject(new Error(`tag "${tag}" request timeout`)), 5_000),
             });
         });
     }
@@ -170,7 +159,7 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
             const tag = response.Header.ClientTag;
 
             if (tag == null) {
-                this.emit("Unsolicited", response);
+                this.emit("Message", response);
 
                 return;
             }
@@ -217,7 +206,7 @@ export class Connection extends BufferedResponse<ConnectionEvents> {
 
     private onSocketError(): (error: Error) => void {
         return (error: Error): void => {
-            log.error(error);
+            this.emit("Error", error);
         };
     }
 }

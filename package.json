@@ -1,5 +1,5 @@
 {
-    "version": "1.2.6",
+    "version": "1.2.7",
     "name": "@mkellsy/leap",
     "displayName": "LEAP",
     "description": "Lutron LEAP client",
@@ -16,7 +16,6 @@
     },
     "dependencies": {
         "@mkellsy/event-emitter": "^1.2.2",
-        "js-logger": "^1.6.1",
         "uuid": "^9.0.1"
     },
     "devDependencies": {

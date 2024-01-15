@@ -1,12 +1,8 @@
-import * as Logger from "js-logger";
-
 import { EventEmitter } from "@mkellsy/event-emitter";
-import { SecureContext, TLSSocket, connect } from "tls";
+import { SecureContext } from "tls";
 
 import { PairingEvents } from "./PairingEvents";
 import { Socket } from "./Socket";
-
-const log = Logger.get("Pairing");
 
 export class Pairing extends EventEmitter<PairingEvents> {
     private socket: Socket;
@@ -66,7 +62,7 @@ export class Pairing extends EventEmitter<PairingEvents> {
 
     private onSocketError(): (error: Error) => void {
         return (error: Error): void => {
-            log.error(error);
+            this.emit("Error", error);
         };
     }
 }
