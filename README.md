@@ -4,28 +4,112 @@ Implementation of Lutron's LEAP protocol for TypeScript.
 This exposes a method to interact with LEAP enabled devices. This requires the client to impliment the system that needs to be intergrated.
 
 ## API
+Pairing a processor or bridge.
 ```js
-import { Connection, Locator, Pairing } from "@mkellsy/leap";
+import { createSecureContext } from "tls";
+import { Pairing } from "@mkellsy/leap";
 
-const locator = new Locator();
+const pairing = new Pairing(
+    "192.168.123.5",
+    8083,
+    createSecureContext({ ca, key, cert })
+);
 
-locator.on("Discovered", (settings) => {
-    console.log(`ID: ${settings.id}`);
-    console.log(`Address: ${settings.ipAddress}`);
-    console.log(`Type: ${settings.systype}`);
-
-    const pairing = new Pairing(settings.ipAddress, 8083);
-
-    pairing.on("Message", (response: any) => {
-        if (response.Body.Status.Permissions.includes("PhysicalAccess")) {
-            pairing.pair(csr);
-        } else {
-            console.log("Certificate: ", response);
-        }
-    });
-
-    pairing.connect();
+pairing.once("Message", (response: Record<string, any>) => {
+    if (response.Body.Status.Permissions.includes("PhysicalAccess")) {
+        // physical access gained
+    } else {
+        // no physical access
+    }
 });
 
-locator.search();
+await pairing.connect();
+```
+
+Fetch access keys (after physical access)
+```js
+this.pairing.once("Message", (response: Record<string, any>) => {
+    /*
+    ca: response.Body.SigningResult.RootCertificate,
+    cert: response.Body.SigningResult.Certificate,
+    key: pki.privateKeyToPem(csr.key),
+    */
+});
+
+this.pairing.pair(csr.cert);
+```
+
+Connect to the processor (using the certificate from pairing)
+```js
+import { createSecureContext } from "tls";
+import { Connection } from "@mkellsy/leap";
+
+const connection = new Connection(
+    "192.168.123.5",
+    8081,
+    createSecureContext({ ca, key, cert })
+);
+```
+
+Making a request
+```js
+import { MultipleAreaDefinition } from "@mkellsy/leap";
+
+const response = await connection.request("ReadRequest", "/area");
+const body = response.Body as MultipleAreaDefinition;
+```
+
+Ping
+```
+/server/1/status/ping
+```
+
+Project
+```
+/project
+```
+
+System Information
+```
+/device?where=IsThisDevice:true
+```
+
+Areas
+```
+/area
+```
+
+Zones
+```
+{area.href}/associatedzone
+```
+
+Zone Status
+```
+{zone.href}/status
+```
+
+Area Controls
+```
+{area.href}/associatedcontrolstation
+```
+
+Area Control
+```
+{device.href}
+```
+
+Area Control Buttons
+```
+{device.href}/buttongroup/expanded
+```
+
+Execute Command
+```
+{zone.href}/commandprocessor
+```
+
+Subscribe
+```
+${button.href}/status/event
 ```
