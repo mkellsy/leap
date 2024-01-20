@@ -1,23 +1,27 @@
 import { SecureContext } from "tls";
 import { v4 } from "uuid";
 
-import { BodyType } from "../Interfaces/BodyType";
-import { BufferedResponse } from "../Interfaces/BufferedResponse";
-import { ClientSettingDefinition } from "../Interfaces/ClientSettingDefinition";
-import { ConnectionEvents } from "./ConnectionEvents";
-import { ExceptionDetail } from "../Interfaces/ExceptionDetail";
-import { Href } from "../Interfaces/Href";
-import { InflightMessage } from "../Interfaces/InflightMessage";
-import { Message } from "../Interfaces/Message";
-import { OneClientSettingDefinition } from "../Interfaces/ClientSettingDefinition";
-import { OnePingResponse } from "../Interfaces/PingResponseDefinition";
-import { PingResponseDefinition } from "../Interfaces/PingResponseDefinition";
-import { Response } from "../Interfaces/Response";
-import { RequestType } from "../Interfaces/RequestType";
+import { BodyType } from "./Interfaces/BodyType";
+import { BufferedResponse } from "./Interfaces/BufferedResponse";
+import { ClientSettingDefinition } from "./Interfaces/ClientSettingDefinition";
+import { ExceptionDetail } from "./Interfaces/ExceptionDetail";
+import { Href } from "./Interfaces/Href";
+import { InflightMessage } from "./Interfaces/InflightMessage";
+import { Message } from "./Interfaces/Message";
+import { OneClientSettingDefinition } from "./Interfaces/ClientSettingDefinition";
+import { OnePingResponse } from "./Interfaces/PingResponseDefinition";
+import { PingResponseDefinition } from "./Interfaces/PingResponseDefinition";
+import { Response } from "./Interfaces/Response";
+import { RequestType } from "./Interfaces/RequestType";
 import { Socket } from "./Socket";
-import { TaggedResponse } from "../Interfaces/TaggedResponse";
+import { TaggedResponse } from "./Interfaces/TaggedResponse";
 
-export class Connection extends BufferedResponse<ConnectionEvents> {
+export class Connection extends BufferedResponse<{
+    Disconnected: () => void;
+    Response: (response: Response) => void;
+    Message: (response: Response) => void;
+    Error: (error: Error) => void;
+}> {
     private socket: Socket;
 
     private requests: Map<string, InflightMessage> = new Map();

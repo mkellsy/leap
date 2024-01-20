@@ -49,5 +49,5 @@ export * from "./Interfaces/Zone";
 export * from "./Interfaces/ZoneDefinition";
 export * from "./Interfaces/ZoneStatus";
 
-export { Connection } from "./Modules/Connection";
-export { Pairing } from "./Modules/Pairing";
+export { Connection } from "./Connection";
+export { Pairing } from "./Pairing";

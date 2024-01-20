@@ -1,8 +1,8 @@
-import { EventEmitter, EventListener } from "@mkellsy/event-emitter";
+import { EventEmitter } from "@mkellsy/event-emitter";
 
 import { Response } from "./Response";
 
-export class BufferedResponse<MAP extends EventListener> extends EventEmitter<MAP> {
+export class BufferedResponse<MAP extends { [key: string]: (...args: any[]) => void }> extends EventEmitter<MAP> {
     private buffer: string = "";
 
     public parse(data: Buffer, callback: (response: Response) => void): void {

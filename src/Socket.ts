@@ -1,10 +1,14 @@
 import { EventEmitter } from "@mkellsy/event-emitter";
 import { connect, SecureContext, TLSSocket } from "tls";
 
-import { Message } from "../Interfaces/Message";
-import { SocketEvents } from "./SocketEvents";
+import { Message } from "./Interfaces/Message";
 
-export class Socket extends EventEmitter<SocketEvents> {
+export class Socket extends EventEmitter<{
+    Error: (error: Error) => void;
+    Close: () => void;
+    Data: (data: Buffer) => void;
+    End: () => void;
+}> {
     private connection?: TLSSocket;
 
     private readonly host: string;

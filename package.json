@@ -1,5 +1,5 @@
 {
-    "version": "1.2.7",
+    "version": "1.2.8",
     "name": "@mkellsy/leap",
     "displayName": "LEAP",
     "description": "Lutron LEAP client",
@@ -12,10 +12,11 @@
     "homepage": "https://github.com/mkellsy/leap",
     "main": "lib/index.js",
     "scripts": {
-        "build": "tsc --project tsconfig.json"
+        "build": "tsc --project tsconfig.json",
+        "prepublishOnly": "npm run build"
     },
     "dependencies": {
-        "@mkellsy/event-emitter": "^1.2.2",
+        "@mkellsy/event-emitter": "^1.2.5",
         "uuid": "^9.0.1"
     },
     "devDependencies": {

@@ -1,10 +1,13 @@
 import { EventEmitter } from "@mkellsy/event-emitter";
 import { SecureContext } from "tls";
 
-import { PairingEvents } from "./PairingEvents";
 import { Socket } from "./Socket";
 
-export class Pairing extends EventEmitter<PairingEvents> {
+export class Pairing extends EventEmitter<{
+    Message: (response: object) => void;
+    Disconnected: () => void;
+    Error: (error: Error) => void;
+}> {
     private socket: Socket;
 
     constructor(host: string, port: number, secureContext: SecureContext) {
