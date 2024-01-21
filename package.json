@@ -2,7 +2,7 @@
     "version": "1.3.0",
     "name": "@mkellsy/leap",
     "displayName": "LEAP",
-    "description": "Lutron LEAP client",
+    "description": "Lutron LEAP protocol",
     "author": "Michael Kellsy",
     "license": "MIT",
     "repository": {
