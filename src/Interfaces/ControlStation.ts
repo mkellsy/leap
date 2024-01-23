@@ -7,5 +7,5 @@ export type ControlStation = Address & {
     Parent: Address;
     AssociatedArea: Address;
     SortOrder: number;
-    AssociatedGangedDevices: Device[];
+    AssociatedGangedDevices: { Device: Device }[];
 };
