@@ -45,6 +45,8 @@ export class Socket extends EventEmitter<{
                 connection.on("data", this.onSocketData);
                 connection.on("end", this.onSocketEnd);
 
+                connection.setKeepAlive(true);
+
                 resolve();
             });
 
