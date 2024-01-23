@@ -89,12 +89,12 @@ export class Connection extends BufferedResponse<{
         await this.sendRequest(tag, "CreateRequest", url, command);
     }
 
-    public async subscribe(url: string, callback: (response: Response) => void): Promise<void> {
+    public async subscribe<T>(url: string, listener: (response: T) => void): Promise<void> {
         const tag = v4();
 
         this.sendRequest(tag, "SubscribeRequest", url).then((response: Response) => {
             if (response.Header.StatusCode != null && response.Header.StatusCode.isSuccessful()) {
-                this.subscriptions.set(tag, callback);
+                this.subscriptions.set(tag, (response: Response) => listener(response.Body as T));
             }
         });
     }
