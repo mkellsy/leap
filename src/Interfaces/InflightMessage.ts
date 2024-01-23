@@ -5,5 +5,5 @@ export interface InflightMessage {
     message: Message;
     resolve: (message: Response) => void;
     reject: (err: Error) => void;
-    timeout: ReturnType<typeof setTimeout>;
+    timeout: NodeJS.Timeout;
 }

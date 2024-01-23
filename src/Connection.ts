@@ -25,10 +25,10 @@ export class Connection extends BufferedResponse<{
 
         this.socket = new Socket(host, port, secureContext);
 
-        this.socket.on("Error", this.onSocketError());
-        this.socket.on("Close", this.onSocketClose());
-        this.socket.on("Data", this.onSocketData());
-        this.socket.on("End", this.onSocketEnd());
+        this.socket.on("Error", this.onSocketError);
+        this.socket.on("Close", this.onSocketClose);
+        this.socket.on("Data", this.onSocketData);
+        this.socket.on("End", this.onSocketEnd);
     }
 
     public async connect(): Promise<void> {
@@ -132,59 +132,49 @@ export class Connection extends BufferedResponse<{
         });
     }
 
-    private onResponse(): (response: Response) => void {
-        return (response: Response): void => {
-            const tag = response.Header.ClientTag;
+    private onResponse = (response: Response): void => {
+        const tag = response.Header.ClientTag;
 
-            if (tag == null) {
-                this.emit("Message", response);
+        if (tag == null) {
+            this.emit("Message", response);
 
-                return;
-            }
+            return;
+        }
 
-            const request = this.requests.get(tag)!;
+        const request = this.requests.get(tag)!;
 
-            if (request != null) {
-                clearTimeout(request.timeout);
+        if (request != null) {
+            clearTimeout(request.timeout);
 
-                this.requests.delete(tag);
-                request.resolve(response);
-            }
+            this.requests.delete(tag);
+            request.resolve(response);
+        }
 
-            const subscription = this.subscriptions.get(tag);
+        const subscription = this.subscriptions.get(tag);
 
-            if (subscription == null) {
-                return;
-            }
+        if (subscription == null) {
+            return;
+        }
 
-            subscription(response);
-        };
-    }
+        subscription(response);
+    };
 
-    private onSocketData(): (data: Buffer) => void {
-        return (data: Buffer): void => {
-            this.parse(data, this.onResponse());
-        };
-    }
+    private onSocketData = (data: Buffer): void => {
+        this.parse(data, this.onResponse);
+    };
 
-    private onSocketClose(): () => void {
-        return (): void => {
-            this.requests.clear();
-            this.subscriptions.clear();
+    private onSocketClose = (): void => {
+        this.requests.clear();
+        this.subscriptions.clear();
 
-            this.emit("Disconnected");
-        };
-    }
+        this.emit("Disconnected");
+    };
 
-    private onSocketEnd(): () => void {
-        return (): void => {
-            this.socket.close();
-        };
-    }
+    private onSocketEnd = (): void => {
+        this.socket.close();
+    };
 
-    private onSocketError(): (error: Error) => void {
-        return (error: Error): void => {
-            this.emit("Error", error);
-        };
-    }
+    private onSocketError = (error: Error): void => {
+        this.emit("Error", error);
+    };
 }

@@ -35,7 +35,19 @@ export class Socket extends EventEmitter<{
                 rejectUnauthorized: false,
             });
 
-            connection.once("secureConnect", this.onSecureConnect(resolve, reject, connection));
+            connection.once("secureConnect", (): void => {
+                this.connection = connection;
+
+                connection.off("error", reject);
+
+                connection.on("error", this.onSocketError);
+                connection.on("close", this.onSocketClose);
+                connection.on("data", this.onSocketData);
+                connection.on("end", this.onSocketEnd);
+
+                resolve();
+            });
+
             connection.once("error", reject);
         });
     }
@@ -57,42 +69,19 @@ export class Socket extends EventEmitter<{
         });
     }
 
-    private onSecureConnect(resolve: (value: void | PromiseLike<void>) => void, reject: (reason?: any) => void, connection: TLSSocket): () => void {
-        return (): void => {
-            this.connection = connection;
+    private onSocketData = (data: Buffer): void => {
+        this.emit("Data", data);
+    };
 
-            connection.off("error", reject);
+    private onSocketClose = (): void => {
+        this.emit("Close");
+    };
 
-            connection.on("error", this.onSocketError());
-            connection.on("close", this.onSocketClose());
-            connection.on("data", this.onSocketData());
-            connection.on("end", this.onSocketEnd());
+    private onSocketEnd = (): void => {
+        this.emit("End");
+    };
 
-            resolve();
-        };
-    }
-
-    private onSocketData(): (data: Buffer) => void {
-        return (data: Buffer): void => {
-            this.emit("Data", data);
-        };
-    }
-
-    private onSocketClose(): () => void {
-        return (): void => {
-            this.emit("Close");
-        };
-    }
-
-    private onSocketEnd(): () => void {
-        return (): void => {
-            this.emit("End");
-        };
-    }
-
-    private onSocketError(): (error: Error) => void {
-        return (error: Error): void => {
-            this.emit("Error", error);
-        };
-    }
+    private onSocketError = (error: Error): void => {
+        this.emit("Error", error);
+    };
 }

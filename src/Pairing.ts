@@ -15,9 +15,9 @@ export class Pairing extends EventEmitter<{
 
         this.socket = new Socket(host, port, secureContext);
 
-        this.socket.on("Error", this.onSocketError());
-        this.socket.on("Close", this.onSocketClose());
-        this.socket.on("Data", this.onSocketData());
+        this.socket.on("Error", this.onSocketError);
+        this.socket.on("Close", this.onSocketClose);
+        this.socket.on("Data", this.onSocketData);
     }
 
     public async connect(): Promise<void> {
@@ -51,21 +51,15 @@ export class Pairing extends EventEmitter<{
         this.socket.write(message);
     }
 
-    private onSocketData(): (data: Buffer) => void {
-        return (data: Buffer): void => {
-            this.emit("Message", JSON.parse(data.toString()));
-        };
-    }
+    private onSocketData = (data: Buffer): void => {
+        this.emit("Message", JSON.parse(data.toString()));
+    };
 
-    private onSocketClose(): () => void {
-        return (): void => {
-            this.emit("Disconnected");
-        };
-    }
+    private onSocketClose = (): void => {
+        this.emit("Disconnected");
+    };
 
-    private onSocketError(): (error: Error) => void {
-        return (error: Error): void => {
-            this.emit("Error", error);
-        };
-    }
+    private onSocketError = (error: Error): void => {
+        this.emit("Error", error);
+    };
 }
