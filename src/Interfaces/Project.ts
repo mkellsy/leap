@@ -1,11 +1,11 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
-export type ProjectDefinition = Href & {
+export type Project = Address & {
     Name: string;
     ControlType: string;
     ProductType: string;
-    Contacts: Href[];
-    TimeclockEventRules: Href;
+    Contacts: Address[];
+    TimeclockEventRules: Address;
     ProjectModifiedTimestamp: {
         Year: number;
         Month: number;
@@ -16,7 +16,3 @@ export type ProjectDefinition = Href & {
         Utc: "string";
     };
 };
-
-export class OneProjectDefinition {
-    Project!: ProjectDefinition;
-}

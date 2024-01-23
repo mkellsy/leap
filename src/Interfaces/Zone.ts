@@ -1,12 +1,16 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
+import { Category } from "./Category";
 import { PhaseSetting } from "./PhaseSetting";
 import { TuningSetting } from "./TuningSetting";
 
-export type Zone = Href & {
-    AssociatedArea: Href;
-    ControlType: string;
+export type Zone = Address & {
     Name: string;
-    PhaseSettings: PhaseSetting;
-    SortOrder: number;
-    TuningSettings: TuningSetting;
+    ControlType: string;
+    Category?: Category;
+    Device?: Address;
+    AssociatedFacade?: Address;
+    AssociatedArea?: Address;
+    PhaseSettings?: PhaseSetting;
+    SortOrder?: number;
+    TuningSettings?: TuningSetting;
 };

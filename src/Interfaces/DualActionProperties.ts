@@ -1,6 +1,6 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
 export type DualActionProperties = {
-    PressPreset: Href;
-    ReleasePreset: Href;
+    PressPreset: Address;
+    ReleasePreset: Address;
 };

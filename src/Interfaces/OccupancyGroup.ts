@@ -1,16 +1,12 @@
+import { Address } from "./Address";
 import { AssociatedArea } from "./AssociatedArea";
 import { AssociatedSensor } from "./AssociatedSensor";
-import { Href } from "./Href";
 
-export type OccupancyGroupDefinition = Href & {
+export type OccupancyGroup = Address & {
     AssociatedAreas?: AssociatedArea[];
     AssociatedSensors?: AssociatedSensor[];
-    ProgrammingModel?: Href;
+    ProgrammingModel?: Address;
     ProgrammingType?: string;
     OccupiedActionSchedule?: { ScheduleType: string }; // nfi
     UnoccupiedActionSchedule?: { ScheduleType: string }; // also nfi
 };
-
-export class OneOccupancyGroupDefinition {
-    OccupancyGroup!: OccupancyGroupDefinition;
-}

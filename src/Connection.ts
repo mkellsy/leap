@@ -1,20 +1,13 @@
 import { SecureContext } from "tls";
 import { v4 } from "uuid";
 
-import { BodyType } from "./Interfaces/BodyType";
 import { BufferedResponse } from "./Interfaces/BufferedResponse";
-import { ClientSettingDefinition } from "./Interfaces/ClientSettingDefinition";
 import { ExceptionDetail } from "./Interfaces/ExceptionDetail";
-import { Href } from "./Interfaces/Href";
 import { InflightMessage } from "./Interfaces/InflightMessage";
 import { Message } from "./Interfaces/Message";
-import { OneClientSettingDefinition } from "./Interfaces/ClientSettingDefinition";
-import { OnePingResponse } from "./Interfaces/PingResponseDefinition";
-import { PingResponseDefinition } from "./Interfaces/PingResponseDefinition";
 import { Response } from "./Interfaces/Response";
 import { RequestType } from "./Interfaces/RequestType";
 import { Socket } from "./Socket";
-import { TaggedResponse } from "./Interfaces/TaggedResponse";
 
 export class Connection extends BufferedResponse<{
     Disconnected: () => void;
@@ -42,13 +35,6 @@ export class Connection extends BufferedResponse<{
         await this.socket.connect();
     }
 
-    public async ping(): Promise<PingResponseDefinition> {
-        const response = await this.request("ReadRequest", "/server/1/status/ping");
-        const body = response.Body as OnePingResponse;
-
-        return body.PingResponse;
-    }
-
     public close() {
         this.socket?.close();
     }
@@ -70,11 +56,13 @@ export class Connection extends BufferedResponse<{
         this.close();
     }
 
-    public async get<T extends BodyType>(href: Href, endpoint?: string): Promise<T> {
-        const response = await this.request("ReadRequest", `${href.href}${endpoint !== undefined ? endpoint : ""}`);
+    public async read<T>(url: string): Promise<T> {
+        const tag = v4();
+        const response = await this.sendRequest(tag, "ReadRequest", url);
+        const body = response.Body as T;
 
-        if (response.Body == null) {
-            throw new Error(`${href.href} no body`);
+        if (body == null) {
+            throw new Error(`${url} no body`);
         }
 
         if (response.Body instanceof ExceptionDetail) {
@@ -84,12 +72,35 @@ export class Connection extends BufferedResponse<{
         return response.Body as T;
     }
 
-    public async request(requestType: RequestType, url: string, body?: Record<string, unknown>, tag?: string): Promise<Response> {
-        await this.connect();
+    public async update<T>(url: string, body: any): Promise<T> {
+        const tag = v4();
+        const response = await this.sendRequest(tag, "UpdateRequest", url, body);
 
-        if (tag === undefined) {
-            tag = v4();
+        if (response.Body instanceof ExceptionDetail) {
+            throw new Error(response.Body.Message);
         }
+
+        return response.Body as T;
+    }
+
+    public async command(url: string, command: any): Promise<void> {
+        const tag = v4();
+
+        await this.sendRequest(tag, "CreateRequest", url, command);
+    }
+
+    public async subscribe(url: string, callback: (response: Response) => void): Promise<void> {
+        const tag = v4();
+
+        this.sendRequest(tag, "SubscribeRequest", url).then((response: Response) => {
+            if (response.Header.StatusCode != null && response.Header.StatusCode.isSuccessful()) {
+                this.subscriptions.set(tag, callback);
+            }
+        });
+    }
+
+    private async sendRequest(tag: string, requestType: RequestType, url: string, body?: Record<string, unknown>): Promise<Response> {
+        await this.connect();
 
         if (this.requests.has(tag!)) {
             const request = this.requests.get(tag!)!;
@@ -119,43 +130,6 @@ export class Connection extends BufferedResponse<{
                 timeout: setTimeout(() => reject(new Error(`tag "${tag}" request timeout`)), 5_000),
             });
         });
-    }
-
-    public async subscribe(
-        url: string,
-        callback: (response: Response) => void,
-        requestType?: RequestType,
-        body?: Record<string, unknown>,
-        tag?: string
-    ): Promise<TaggedResponse> {
-        const uuid = tag || v4();
-
-        return await this.request(requestType || "SubscribeRequest", url, body, uuid).then((response: Response) => {
-            if (response.Header.StatusCode !== undefined && response.Header.StatusCode.isSuccessful()) {
-                this.subscriptions.set(uuid, callback);
-            }
-
-            return { response, tag: uuid };
-        });
-    }
-
-    public async setVersion(): Promise<ExceptionDetail | ClientSettingDefinition> {
-        const response = await this.request("UpdateRequest", "/clientsetting", {
-            ClientSetting: {
-                ClientMajorVersion: 1,
-            },
-        });
-
-        switch (response.CommuniqueType) {
-            case "ExceptionResponse":
-                return response.Body! as ExceptionDetail;
-
-            case "UpdateResponse":
-                return (response.Body! as OneClientSettingDefinition).ClientSetting;
-
-            default:
-                throw new Error("bad communique type");
-        }
     }
 
     private onResponse(): (response: Response) => void {

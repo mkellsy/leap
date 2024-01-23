@@ -1,10 +1,6 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
-export type ButtonStatus = Href & {
-    Button: Href;
+export type ButtonStatus = Address & {
+    Button: Address;
     ButtonEvent: { EventType: "Press" | "Release" | "LongHold" };
 };
-
-export class OneButtonStatusEvent {
-    ButtonStatus!: ButtonStatus;
-}

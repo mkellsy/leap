@@ -1,22 +1,14 @@
+import { Address } from "./Address";
 import { FanSpeedType } from "./FanSpeedType";
-import { Href } from "./Href";
 
-export type ZoneStatus = Href & {
+export type ZoneStatus = Address & {
     CCOLevel: "Open" | "Closed";
     Level: number;
     SwitchedLevel: "On" | "Off";
     FanSpeed: FanSpeedType;
-    Zone: Href;
+    Zone: Address;
     StatusAccuracy: "Good";
-    AssociatedArea: Href;
+    AssociatedArea: Address;
     Availability: "Available" | "Unavailable" | "Mixed" | "Unknown";
     Tilt: number;
 };
-
-export class MultipleZoneStatus {
-    ZoneStatuses!: ZoneStatus[];
-}
-
-export class OneZoneStatus {
-    ZoneStatus!: ZoneStatus;
-}

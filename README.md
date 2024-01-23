@@ -53,10 +53,13 @@ const connection = new Connection(
 
 Making a request
 ```js
-import { MultipleAreaDefinition } from "@mkellsy/leap";
+import { Area } from "@mkellsy/leap";
 
-const response = await connection.request("ReadRequest", "/area");
-const body = response.Body as MultipleAreaDefinition;
+const areas = await connection.read<Area[]>("/area");
+
+for (const area of areas) {
+    // area logic
+}
 ```
 
 Ping
@@ -81,35 +84,35 @@ Areas
 
 Zones
 ```
-{area.href}/associatedzone
+/zone/[id]/associatedzone
 ```
 
 Zone Status
 ```
-{zone.href}/status
+/zone/[id]/status
 ```
 
 Area Controls
 ```
-{area.href}/associatedcontrolstation
+/area/[id]/associatedcontrolstation
 ```
 
 Area Control
 ```
-{device.href}
+/device/[id]
 ```
 
 Area Control Buttons
 ```
-{device.href}/buttongroup/expanded
+/device/[id]/buttongroup/expanded
 ```
 
 Execute Command
 ```
-{zone.href}/commandprocessor
+/zone/[id]/commandprocessor
 ```
 
 Subscribe
 ```
-${button.href}/status/event
+/button/[id]/status/event
 ```

@@ -1,5 +1,5 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
-export type AssociatedSensor = Href & {
-    OccupancySensor: Href;
+export type AssociatedSensor = Address & {
+    OccupancySensor: Address;
 };

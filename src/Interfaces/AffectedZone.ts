@@ -1,8 +1,8 @@
-import { ButtonGroupDefinition } from "./ButtonGroupDefinition";
-import { Href } from "./Href";
+import { Address } from "./Address";
+import { ButtonGroup } from "./ButtonGroup";
 import { Zone } from "./Zone";
 
-export type AffectedZone = Href & {
-    ButtonGroup: ButtonGroupDefinition;
+export type AffectedZone = Address & {
+    ButtonGroup: ButtonGroup;
     Zone: Zone;
 };

@@ -1,15 +1,7 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
-export type AreaStatus = Href & {
+export type AreaStatus = Address & {
     Level: number;
     OccupancyStatus: string;
-    CurrentScene: Href;
+    CurrentScene: Address;
 };
-
-export class MultipleAreaStatus {
-    AreaStatuses!: AreaStatus[];
-}
-
-export class OneAreaStatus {
-    AreaStatus!: AreaStatus;
-}

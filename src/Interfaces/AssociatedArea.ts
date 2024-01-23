@@ -1,5 +1,5 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
-export type AssociatedArea = Href & {
-    Area: Href;
+export type AssociatedArea = Address & {
+    Area: Address;
 };

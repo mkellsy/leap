@@ -1,6 +1,6 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
-export type TuningSetting = Href & {
+export type TuningSetting = Address & {
     HighEndTrim: number;
     LowEndTrim: number;
 };

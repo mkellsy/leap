@@ -1,12 +1,8 @@
-import { Href } from "./Href";
-import { OccupancyGroupDefinition } from "./OccupancyGroupDefinition";
+import { Address } from "./Address";
+import { OccupancyGroup } from "./OccupancyGroup";
 import { OccupancyStatus } from "./OccupancyStatus";
 
-export type OccupancyGroupStatus = Href & {
-    OccupancyGroup: OccupancyGroupDefinition;
+export type OccupancyGroupStatus = Address & {
+    OccupancyGroup: OccupancyGroup;
     OccupancyStatus: OccupancyStatus;
 };
-
-export class MultipleOccupancyGroupStatus {
-    OccupancyGroupStatuses!: OccupancyGroupStatus[];
-}

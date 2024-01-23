@@ -1,17 +1,13 @@
+import { Address } from "./Address";
 import { AdvancedToggleProperties } from "./AdvancedToggleProperties";
 import { DualActionProperties } from "./DualActionProperties";
-import { Href } from "./Href";
 import { ProgrammingModelType } from "./ProgrammingModelType";
 
-export type ProgrammingModelDefinition = Href & {
+export type ProgrammingModel = Address & {
     AdvancedToggleProperties: AdvancedToggleProperties;
     DualActionProperties: DualActionProperties;
     Name: string;
-    Parent: Href;
-    Preset: Href;
+    Parent: Address;
+    Preset: Address;
     ProgrammingModelType: ProgrammingModelType;
 };
-
-export class OneProgrammingModelDefinition {
-    ProgrammingModel!: ProgrammingModelDefinition;
-}

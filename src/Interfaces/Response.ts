@@ -1,5 +1,6 @@
 import * as Body from "./BodyType";
 
+import { ExceptionDetail } from "./ExceptionDetail";
 import { RequestType } from "./RequestType";
 import { MessageType } from "./MessageType";
 import { ResponseHeader } from "./ResponseHeader";
@@ -23,9 +24,17 @@ export class Response {
             MessageBodyType: payload.Header.MessageBodyType as MessageType,
         });
 
-        return Object.assign(new Response(), payload, {
-            Header: header,
-            Body: header.MessageBodyType ? Body.parse(header.MessageBodyType, payload.Body) : undefined,
-        });
+        if (header.MessageBodyType == null) {
+            return Object.assign(new Response(), { Header: header });
+        }
+
+        const key = Object.keys(payload.Body || {})[0];
+        const body = key != null ? payload.Body[key] || undefined : undefined;
+
+        if (payload.Body instanceof ExceptionDetail) {
+            return Object.assign(new Response(), payload, { Header: header });
+        }
+
+        return Object.assign(new Response(), payload, { Header: header, Body: body });
     }
 }

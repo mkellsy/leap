@@ -1,6 +1,6 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
 export type AdvancedToggleProperties = {
-    PrimaryPreset: Href;
-    SecondaryPreset: Href;
+    PrimaryPreset: Address;
+    SecondaryPreset: Address;
 };

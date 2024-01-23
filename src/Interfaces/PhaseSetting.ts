@@ -1,5 +1,5 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
-export type PhaseSetting = Href & {
+export type PhaseSetting = Address & {
     Direction: string;
 };

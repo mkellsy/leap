@@ -1,10 +1,6 @@
+import { Address } from "./Address";
 import { DeviceHeard } from "./DeviceHeard";
-import { Href } from "./Href";
 
-export type DeviceStatus = Href & {
+export type DeviceStatus = Address & {
     DeviceHeard: DeviceHeard;
 };
-
-export class OneDeviceStatus {
-    DeviceStatus!: DeviceStatus;
-}

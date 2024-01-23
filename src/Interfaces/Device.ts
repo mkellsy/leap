@@ -1,17 +1,17 @@
-import { Href } from "./Href";
+import { Address } from "./Address";
 
-export type DeviceDefinition = Href & {
+export type Device = Address & {
     Name: string;
-    Parent: Href;
+    Parent: Address;
     SerialNumber: string;
     ModelNumber: string;
     DeviceType: string;
-    ButtonGroups: Href[];
-    LocalZones: Href[];
-    AssociatedArea: Href;
-    OccupancySensors: Href[];
-    LinkNodes: Href[];
-    DeviceRules: Href[];
+    ButtonGroups: Address[];
+    LocalZones: Address[];
+    AssociatedArea: Address;
+    OccupancySensors: Address[];
+    LinkNodes: Address[];
+    DeviceRules: Address[];
     RepeaterProperties: {
         IsRepeater: boolean;
     };
@@ -32,11 +32,3 @@ export type DeviceDefinition = Href & {
     AddressedState?: "Addressed" | "Unaddressed" | "Unknown";
     IsThisDevice?: boolean;
 };
-
-export class MultipleDeviceDefinition {
-    Devices: DeviceDefinition[] = [];
-}
-
-export class OneDeviceDefinition {
-    Device!: DeviceDefinition;
-}
