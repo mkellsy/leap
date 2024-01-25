@@ -1,60 +1,55 @@
 import { EventEmitter } from "@mkellsy/event-emitter";
-import { connect, SecureContext, TLSSocket } from "tls";
+import { connect, createSecureContext, SecureContext, TLSSocket } from "tls";
 
+import { AuthContext } from "./Interfaces/AuthContext";
 import { Message } from "./Interfaces/Message";
 
 export class Socket extends EventEmitter<{
     Error: (error: Error) => void;
-    Close: () => void;
     Data: (data: Buffer) => void;
-    End: () => void;
+    Disconnect: () => void;
 }> {
     private connection?: TLSSocket;
 
     private readonly host: string;
     private readonly port: number;
-    private readonly secureContext: SecureContext;
+    private readonly context: AuthContext;
 
-    constructor(host: string, port: number, secureContext: SecureContext) {
+    constructor(host: string, port: number, context: AuthContext) {
         super();
 
         this.host = host;
         this.port = port;
-        this.secureContext = secureContext;
+        this.context = context;
     }
 
-    public connect(): Promise<void> {
+    public connect(): Promise<string> {
         return new Promise((resolve, reject) => {
-            if (this.connection != null) {
-                return resolve();
-            }
-
             const connection = connect(this.port, this.host, {
-                secureContext: this.secureContext,
-                secureProtocol: "TLSv1_2_method",
+                secureContext: createSecureContext(this.context),
+                secureProtocol: "TLS_method",
                 rejectUnauthorized: false,
             });
 
             connection.once("secureConnect", (): void => {
                 this.connection = connection;
 
-                connection.off("error", reject);
+                this.connection.off("error", reject);
 
-                connection.on("error", this.onSocketError);
-                connection.on("close", this.onSocketClose);
-                connection.on("data", this.onSocketData);
-                connection.on("end", this.onSocketEnd);
+                this.connection.on("error", this.onSocketError);
+                this.connection.on("data", this.onSocketData);
+                this.connection.on("end", this.onSocketEnd);
 
-                connection.setKeepAlive(true);
+                this.connection.setKeepAlive(true);
 
-                resolve();
+                resolve(this.connection.getProtocol() || "Unknown");
             });
 
             connection.once("error", reject);
         });
     }
 
-    public close(): void {
+    public disconnect(): void {
         this.connection?.end();
         this.connection?.destroy();
     }
@@ -75,12 +70,8 @@ export class Socket extends EventEmitter<{
         this.emit("Data", data);
     };
 
-    private onSocketClose = (): void => {
-        this.emit("Close");
-    };
-
     private onSocketEnd = (): void => {
-        this.emit("End");
+        this.emit("Disconnect");
     };
 
     private onSocketError = (error: Error): void => {

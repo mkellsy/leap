@@ -1,36 +1,51 @@
 import { EventEmitter } from "@mkellsy/event-emitter";
-import { SecureContext } from "tls";
 
+import { AuthContext } from "./Interfaces/AuthContext";
 import { Socket } from "./Socket";
 
 export class Pairing extends EventEmitter<{
+    Connect: (protocol: string) => void;
+    Disconnect: () => void;
     Message: (response: object) => void;
-    Disconnected: () => void;
     Error: (error: Error) => void;
 }> {
-    private socket: Socket;
+    private socket?: Socket;
+    private teardown: boolean = false;
 
-    constructor(host: string, port: number, secureContext: SecureContext) {
+    private readonly host: string;
+    private readonly port: number;
+    private readonly context: AuthContext;
+
+    constructor(host: string, port: number, context: AuthContext) {
         super();
 
-        this.socket = new Socket(host, port, secureContext);
-
-        this.socket.on("Error", this.onSocketError);
-        this.socket.on("Close", this.onSocketClose);
-        this.socket.on("Data", this.onSocketData);
+        this.host = host;
+        this.port = port;
+        this.context = context;
     }
 
     public async connect(): Promise<void> {
-        await this.socket.connect();
+        this.teardown = false;
+
+        this.socket?.off();
+        this.socket = new Socket(this.host, this.port, this.context);
+
+        this.socket.on("Data", this.onSocketData);
+        this.socket.on("Error", this.onSocketError);
+        this.socket.on("Disconnect", this.onSocketDisconnect);
+
+        const protocol = await this.socket.connect();
+
+        this.emit("Connect", protocol);
     }
 
-    public close() {
-        this.socket?.close();
+    public disconnect() {
+        this.teardown = true;
+
+        this.socket?.disconnect();
     }
 
     public async pair(csr: string) {
-        await this.connect();
-
         const message = {
             Header: {
                 RequestType: "Execute",
@@ -48,15 +63,19 @@ export class Pairing extends EventEmitter<{
             },
         };
 
-        this.socket.write(message);
+        this.socket?.write(message);
     }
 
     private onSocketData = (data: Buffer): void => {
         this.emit("Message", JSON.parse(data.toString()));
     };
 
-    private onSocketClose = (): void => {
-        this.emit("Disconnected");
+    private onSocketDisconnect = (): void => {
+        if (!this.teardown) {
+            this.connect();
+        } else {
+            this.emit("Disconnect");
+        }
     };
 
     private onSocketError = (error: Error): void => {

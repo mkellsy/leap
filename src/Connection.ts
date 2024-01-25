@@ -1,6 +1,6 @@
-import { SecureContext } from "tls";
 import { v4 } from "uuid";
 
+import { AuthContext } from "./Interfaces/AuthContext";
 import { BufferedResponse } from "./Interfaces/BufferedResponse";
 import { ExceptionDetail } from "./Interfaces/ExceptionDetail";
 import { InflightMessage } from "./Interfaces/InflightMessage";
@@ -8,52 +8,63 @@ import { Message } from "./Interfaces/Message";
 import { Response } from "./Interfaces/Response";
 import { RequestType } from "./Interfaces/RequestType";
 import { Socket } from "./Socket";
+import { Subscription } from "./Interfaces/Subscription";
 
 export class Connection extends BufferedResponse<{
-    Disconnected: () => void;
+    Connect: (protocol: string) => void;
+    Disconnect: () => void;
     Response: (response: Response) => void;
     Message: (response: Response) => void;
     Error: (error: Error) => void;
 }> {
-    private socket: Socket;
+    private socket?: Socket;
+    private teardown: boolean = false;
+
+    private host: string;
+    private port: number;
+    private context: AuthContext;
 
     private requests: Map<string, InflightMessage> = new Map();
-    private subscriptions: Map<string, (r: Response) => void> = new Map();
+    private subscriptions: Map<string, Subscription> = new Map();
 
-    constructor(host: string, port: number, secureContext: SecureContext) {
+    constructor(host: string, port: number, context: AuthContext) {
         super();
 
-        this.socket = new Socket(host, port, secureContext);
-
-        this.socket.on("Error", this.onSocketError);
-        this.socket.on("Close", this.onSocketClose);
-        this.socket.on("Data", this.onSocketData);
-        this.socket.on("End", this.onSocketEnd);
+        this.host = host;
+        this.port = port;
+        this.context = context;
     }
 
     public async connect(): Promise<void> {
-        await this.socket.connect();
-    }
+        this.teardown = false;
+        this.socket = undefined;
 
-    public close() {
-        this.socket?.close();
-    }
+        const subscriptions = [...this.subscriptions.values()];
+        const socket = new Socket(this.host, this.port, this.context);
 
-    public drain() {
-        this.off("Message");
-        this.off("Response");
-        this.off("Disconnected");
+        socket.on("Data", this.onSocketData);
+        socket.on("Error", this.onSocketError);
+        socket.on("Disconnect", this.onSocketDisconnect);
 
-        for (const tag of this.requests.keys()) {
-            const request = this.requests.get(tag)!;
+        const protocol = await socket.connect();
 
-            clearTimeout(request.timeout);
+        this.subscriptions.clear();
+        this.socket = socket;
+
+        for (const subscription of subscriptions) {
+            this.subscribe(subscription.url, subscription.listener);
         }
 
-        this.requests.clear();
-        this.subscriptions.clear();
+        this.emit("Connect", protocol);
+    }
 
-        this.close();
+    public disconnect() {
+        this.teardown = true;
+
+        this.drainRequests();
+
+        this.subscriptions.clear();
+        this.socket?.disconnect();
     }
 
     public async read<T>(url: string): Promise<T> {
@@ -89,26 +100,35 @@ export class Connection extends BufferedResponse<{
         await this.sendRequest(tag, "CreateRequest", url, command);
     }
 
-    public async subscribe<T>(url: string, listener: (response: T) => void): Promise<void> {
+    public subscribe<T>(url: string, listener: (response: T) => void): void {
         const tag = v4();
 
         this.sendRequest(tag, "SubscribeRequest", url).then((response: Response) => {
             if (response.Header.StatusCode != null && response.Header.StatusCode.isSuccessful()) {
-                this.subscriptions.set(tag, (response: Response) => listener(response.Body as T));
+                this.subscriptions.set(tag, { url, listener, callback: (response: Response) => listener(response.Body as T) });
             }
         });
     }
 
-    private async sendRequest(tag: string, requestType: RequestType, url: string, body?: Record<string, unknown>): Promise<Response> {
-        await this.connect();
+    private drainRequests() {
+        for (const tag of this.requests.keys()) {
+            const request = this.requests.get(tag)!;
 
-        if (this.requests.has(tag!)) {
-            const request = this.requests.get(tag!)!;
+            clearTimeout(request.timeout);
+        }
+
+        this.requests.clear();
+    }
+
+    private async sendRequest(tag: string, requestType: RequestType, url: string, body?: Record<string, unknown>): Promise<Response> {
+        if (this.requests.has(tag)) {
+            const request = this.requests.get(tag)!;
 
             request.reject(new Error(`tag "${tag}" reused`));
+
             clearTimeout(request.timeout);
 
-            this.requests.delete(tag!);
+            this.requests.delete(tag);
         }
 
         const message: Message = {
@@ -120,7 +140,7 @@ export class Connection extends BufferedResponse<{
             Body: body,
         };
 
-        await this.socket.write(message);
+        await this.socket?.write(message);
 
         return new Promise<Response>((resolve, reject) => {
             this.requests.set(tag!, {
@@ -156,22 +176,20 @@ export class Connection extends BufferedResponse<{
             return;
         }
 
-        subscription(response);
+        subscription.callback(response);
     };
 
     private onSocketData = (data: Buffer): void => {
         this.parse(data, this.onResponse);
     };
 
-    private onSocketClose = (): void => {
-        this.requests.clear();
-        this.subscriptions.clear();
-
-        this.emit("Disconnected");
-    };
-
-    private onSocketEnd = (): void => {
-        this.socket.close();
+    private onSocketDisconnect = (): void => {
+        if (!this.teardown) {
+            this.drainRequests();
+            this.connect();
+        } else {
+            this.emit("Disconnect");
+        }
     };
 
     private onSocketError = (error: Error): void => {
