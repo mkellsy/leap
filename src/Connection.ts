@@ -2,6 +2,7 @@ import { v4 } from "uuid";
 
 import { AuthContext } from "./Interfaces/AuthContext";
 import { BufferedResponse } from "./Interfaces/BufferedResponse";
+import { Endpoint } from "./Interfaces/Endpoint";
 import { ExceptionDetail } from "./Interfaces/ExceptionDetail";
 import { InflightMessage } from "./Interfaces/InflightMessage";
 import { Message } from "./Interfaces/Message";
@@ -22,16 +23,18 @@ export class Connection extends BufferedResponse<{
 
     private host: string;
     private port: number;
+    private endpoint: Endpoint
     private context: AuthContext;
 
     private requests: Map<string, InflightMessage> = new Map();
     private subscriptions: Map<string, Subscription> = new Map();
 
-    constructor(host: string, port: number, context: AuthContext) {
+    constructor(host: string, endpoint: Endpoint, context: AuthContext) {
         super();
 
         this.host = host;
-        this.port = port;
+        this.endpoint = endpoint;
+        this.port = endpoint === "Operational" ? 8081 : 8083;
         this.context = context;
     }
 
@@ -51,8 +54,10 @@ export class Connection extends BufferedResponse<{
         this.subscriptions.clear();
         this.socket = socket;
 
-        for (const subscription of subscriptions) {
-            this.subscribe(subscription.url, subscription.listener);
+        if (this.endpoint === "Operational") {
+            for (const subscription of subscriptions) {
+                this.subscribe(subscription.url, subscription.listener);
+            }
         }
 
         this.emit("Connect", protocol);
@@ -61,13 +66,19 @@ export class Connection extends BufferedResponse<{
     public disconnect() {
         this.teardown = true;
 
-        this.drainRequests();
+        if (this.endpoint === "Operational") {
+            this.drainRequests();
+        }
 
         this.subscriptions.clear();
         this.socket?.disconnect();
     }
 
     public async read<T>(url: string): Promise<T> {
+        if (this.endpoint !== "Operational") {
+            throw new Error("Only available for operational connections");
+        }
+
         const tag = v4();
         const response = await this.sendRequest(tag, "ReadRequest", url);
         const body = response.Body as T;
@@ -83,7 +94,49 @@ export class Connection extends BufferedResponse<{
         return response.Body as T;
     }
 
+    public async authenticate(csr: string) {
+        if (this.endpoint !== "Authentication") {
+            throw new Error("Only available for authentication connections");
+        }
+
+        return new Promise((resolve, reject) => {
+            const message = {
+                Header: {
+                    RequestType: "Execute",
+                    Url: "/pair",
+                    ClientTag: "get-cert",
+                },
+                Body: {
+                    CommandType: "CSR",
+                    Parameters: {
+                        CSR: csr,
+                        DisplayName: "get_lutron_cert.py",
+                        DeviceUID: "000000000000",
+                        Role: "Admin",
+                    },
+                },
+            };
+
+            const timeout = setTimeout(() => reject(new Error("Authentication timeout exceeded")), 5_000);
+
+            this.once("Message", (response: Record<string, any>) => {
+                clearTimeout(timeout);
+
+                resolve({
+                    ca: response.Body.SigningResult.RootCertificate,
+                    cert: response.Body.SigningResult.Certificate,
+                });
+            });
+
+            this.socket?.write(message);
+        });
+    }
+
     public async update<T>(url: string, body: any): Promise<T> {
+        if (this.endpoint !== "Operational") {
+            throw new Error("Only available for operational connections");
+        }
+
         const tag = v4();
         const response = await this.sendRequest(tag, "UpdateRequest", url, body);
 
@@ -95,12 +148,20 @@ export class Connection extends BufferedResponse<{
     }
 
     public async command(url: string, command: any): Promise<void> {
+        if (this.endpoint !== "Operational") {
+            throw new Error("Only available for operational connections");
+        }
+
         const tag = v4();
 
         await this.sendRequest(tag, "CreateRequest", url, command);
     }
 
     public subscribe<T>(url: string, listener: (response: T) => void): void {
+        if (this.endpoint !== "Operational") {
+            throw new Error("Only available for operational connections");
+        }
+
         const tag = v4();
 
         this.sendRequest(tag, "SubscribeRequest", url).then((response: Response) => {
@@ -180,7 +241,11 @@ export class Connection extends BufferedResponse<{
     };
 
     private onSocketData = (data: Buffer): void => {
-        this.parse(data, this.onResponse);
+        if (this.endpoint === "Operational") {
+            this.parse(data, this.onResponse);
+        } else {
+            this.emit("Message", JSON.parse(data.toString()));
+        }
     };
 
     private onSocketDisconnect = (): void => {
