@@ -1,7 +1,9 @@
+import { pki } from "node-forge";
 import { v4 } from "uuid";
 
 import { AuthContext } from "./Interfaces/AuthContext";
 import { BufferedResponse } from "./Interfaces/BufferedResponse";
+import { CertificateRequest } from "./Interfaces/CertificateRequest";
 import { Endpoint } from "./Interfaces/Endpoint";
 import { ExceptionDetail } from "./Interfaces/ExceptionDetail";
 import { InflightMessage } from "./Interfaces/InflightMessage";
@@ -94,7 +96,7 @@ export class Connection extends BufferedResponse<{
         return response.Body as T;
     }
 
-    public async authenticate(csr: string) {
+    public async authenticate(csr: CertificateRequest): Promise<AuthContext> {
         if (this.endpoint !== "Authentication") {
             throw new Error("Only available for authentication connections");
         }
@@ -109,7 +111,7 @@ export class Connection extends BufferedResponse<{
                 Body: {
                     CommandType: "CSR",
                     Parameters: {
-                        CSR: csr,
+                        CSR: csr.cert,
                         DisplayName: "get_lutron_cert.py",
                         DeviceUID: "000000000000",
                         Role: "Admin",
@@ -125,6 +127,7 @@ export class Connection extends BufferedResponse<{
                 resolve({
                     ca: response.Body.SigningResult.RootCertificate,
                     cert: response.Body.SigningResult.Certificate,
+                    key: pki.privateKeyToPem(csr.key),
                 });
             });
 

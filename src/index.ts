@@ -15,6 +15,7 @@ export { ButtonGroupExpanded } from "./Interfaces/ButtonGroupExpanded";
 export { ButtonStatus } from "./Interfaces/ButtonStatus";
 
 export { Category } from "./Interfaces/Category";
+export { CertificateRequest } from "./Interfaces/CertificateRequest";
 export { ClientSetting } from "./Interfaces/ClientSetting";
 export { ControlStation } from "./Interfaces/ControlStation";
 
