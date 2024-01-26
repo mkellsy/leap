@@ -1,7 +1,7 @@
 import { EventEmitter } from "@mkellsy/event-emitter";
 import { connect, createSecureContext, SecureContext, TLSSocket } from "tls";
 
-import { AuthContext } from "./Interfaces/AuthContext";
+import { Certificate } from "./Interfaces/Certificate";
 import { Message } from "./Interfaces/Message";
 
 export class Socket extends EventEmitter<{
@@ -13,20 +13,20 @@ export class Socket extends EventEmitter<{
 
     private readonly host: string;
     private readonly port: number;
-    private readonly context: AuthContext;
+    private readonly certificate: Certificate;
 
-    constructor(host: string, port: number, context: AuthContext) {
+    constructor(host: string, port: number, certificate: Certificate) {
         super();
 
         this.host = host;
         this.port = port;
-        this.context = context;
+        this.certificate = certificate;
     }
 
     public connect(): Promise<string> {
         return new Promise((resolve, reject) => {
             const connection = connect(this.port, this.host, {
-                secureContext: createSecureContext(this.context),
+                secureContext: createSecureContext(this.certificate),
                 secureProtocol: "TLS_method",
                 rejectUnauthorized: false,
             });

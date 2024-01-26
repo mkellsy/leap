@@ -1,10 +1,13 @@
+import fs from "fs";
+import path from "path";
+
+import { BSON } from "bson";
 import { pki } from "node-forge";
 import { v4 } from "uuid";
 
-import { AuthContext } from "./Interfaces/AuthContext";
 import { BufferedResponse } from "./Interfaces/BufferedResponse";
+import { Certificate } from "./Interfaces/Certificate";
 import { CertificateRequest } from "./Interfaces/CertificateRequest";
-import { Endpoint } from "./Interfaces/Endpoint";
 import { ExceptionDetail } from "./Interfaces/ExceptionDetail";
 import { InflightMessage } from "./Interfaces/InflightMessage";
 import { Message } from "./Interfaces/Message";
@@ -21,23 +24,29 @@ export class Connection extends BufferedResponse<{
     Error: (error: Error) => void;
 }> {
     private socket?: Socket;
+    private secure: boolean = false;
     private teardown: boolean = false;
 
     private host: string;
     private port: number;
-    private endpoint: Endpoint
-    private context: AuthContext;
+    private certificate: Certificate;
 
     private requests: Map<string, InflightMessage> = new Map();
     private subscriptions: Map<string, Subscription> = new Map();
 
-    constructor(host: string, endpoint: Endpoint, context: AuthContext) {
+    constructor(host: string, certificate?: Certificate) {
         super();
 
         this.host = host;
-        this.endpoint = endpoint;
-        this.port = endpoint === "Operational" ? 8081 : 8083;
-        this.context = context;
+        this.port = certificate != null ? 8081 : 8083;
+        this.secure = certificate != null;
+
+        this.certificate = {
+            ca: "",
+            cert: "",
+            key: "",
+            ...(certificate != null ? certificate : this.authorityCertificate())
+        };
     }
 
     public async connect(): Promise<void> {
@@ -45,7 +54,7 @@ export class Connection extends BufferedResponse<{
         this.socket = undefined;
 
         const subscriptions = [...this.subscriptions.values()];
-        const socket = new Socket(this.host, this.port, this.context);
+        const socket = new Socket(this.host, this.port, this.certificate);
 
         socket.on("Data", this.onSocketData);
         socket.on("Error", this.onSocketError);
@@ -53,10 +62,14 @@ export class Connection extends BufferedResponse<{
 
         const protocol = await socket.connect();
 
+        if (!this.secure) {
+            await this.physicalAccess();
+        }
+
         this.subscriptions.clear();
         this.socket = socket;
 
-        if (this.endpoint === "Operational") {
+        if (this.secure) {
             for (const subscription of subscriptions) {
                 this.subscribe(subscription.url, subscription.listener);
             }
@@ -68,7 +81,7 @@ export class Connection extends BufferedResponse<{
     public disconnect() {
         this.teardown = true;
 
-        if (this.endpoint === "Operational") {
+        if (this.secure) {
             this.drainRequests();
         }
 
@@ -77,8 +90,8 @@ export class Connection extends BufferedResponse<{
     }
 
     public async read<T>(url: string): Promise<T> {
-        if (this.endpoint !== "Operational") {
-            throw new Error("Only available for operational connections");
+        if (!this.secure) {
+            throw new Error("Only available for secure connections");
         }
 
         const tag = v4();
@@ -96,9 +109,9 @@ export class Connection extends BufferedResponse<{
         return response.Body as T;
     }
 
-    public async authenticate(csr: CertificateRequest): Promise<AuthContext> {
-        if (this.endpoint !== "Authentication") {
-            throw new Error("Only available for authentication connections");
+    public async authenticate(csr: CertificateRequest): Promise<Certificate> {
+        if (this.secure) {
+            throw new Error("Only available for physical connections");
         }
 
         return new Promise((resolve, reject) => {
@@ -136,8 +149,8 @@ export class Connection extends BufferedResponse<{
     }
 
     public async update<T>(url: string, body: any): Promise<T> {
-        if (this.endpoint !== "Operational") {
-            throw new Error("Only available for operational connections");
+        if (!this.secure) {
+            throw new Error("Only available for secure connections");
         }
 
         const tag = v4();
@@ -151,8 +164,8 @@ export class Connection extends BufferedResponse<{
     }
 
     public async command(url: string, command: any): Promise<void> {
-        if (this.endpoint !== "Operational") {
-            throw new Error("Only available for operational connections");
+        if (!this.secure) {
+            throw new Error("Only available for secure connections");
         }
 
         const tag = v4();
@@ -161,8 +174,8 @@ export class Connection extends BufferedResponse<{
     }
 
     public subscribe<T>(url: string, listener: (response: T) => void): void {
-        if (this.endpoint !== "Operational") {
-            throw new Error("Only available for operational connections");
+        if (!this.secure) {
+            throw new Error("Only available for secure connections");
         }
 
         const tag = v4();
@@ -244,7 +257,7 @@ export class Connection extends BufferedResponse<{
     };
 
     private onSocketData = (data: Buffer): void => {
-        if (this.endpoint === "Operational") {
+        if (this.secure) {
             this.parse(data, this.onResponse);
         } else {
             this.emit("Message", JSON.parse(data.toString()));
@@ -263,4 +276,41 @@ export class Connection extends BufferedResponse<{
     private onSocketError = (error: Error): void => {
         this.emit("Error", error);
     };
+
+    private authorityCertificate(): Certificate | null {
+        const filename = path.resolve(__dirname, "../authority");
+
+        if (fs.existsSync(filename)) {
+            const bytes = fs.readFileSync(filename);
+            const certificate = BSON.deserialize(bytes) as Certificate;
+
+            if (certificate == null) {
+                return null;
+            }
+
+            certificate.ca = Buffer.from(certificate.ca, "base64").toString("utf8");
+            certificate.key = Buffer.from(certificate.key, "base64").toString("utf8");
+            certificate.cert = Buffer.from(certificate.cert, "base64").toString("utf8");
+
+            return certificate;
+        }
+
+        return null;
+    }
+
+    private physicalAccess(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error("Physical timeout exceeded")), 60_000);
+
+            this.once("Message", (response: Record<string, any>) => {
+                if (response.Body.Status.Permissions.includes("PhysicalAccess")) {
+                    clearTimeout(timeout);
+
+                    return resolve();
+                }
+
+                return reject(new Error("Unknown pairing error"));
+            });
+        })
+    }
 }

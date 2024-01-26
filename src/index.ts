@@ -6,7 +6,6 @@ export { AreaScene } from "./Interfaces/AreaScene";
 export { AreaStatus } from "./Interfaces/AreaStatus";
 export { AssociatedArea } from "./Interfaces/AssociatedArea";
 export { AssociatedSensor } from "./Interfaces/AssociatedSensor";
-export { AuthContext } from "./Interfaces/AuthContext";
 
 export { BodyType } from "./Interfaces/BodyType";
 export { Button } from "./Interfaces/Button";
@@ -15,6 +14,7 @@ export { ButtonGroupExpanded } from "./Interfaces/ButtonGroupExpanded";
 export { ButtonStatus } from "./Interfaces/ButtonStatus";
 
 export { Category } from "./Interfaces/Category";
+export { Certificate } from "./Interfaces/Certificate";
 export { CertificateRequest } from "./Interfaces/CertificateRequest";
 export { ClientSetting } from "./Interfaces/ClientSetting";
 export { ControlStation } from "./Interfaces/ControlStation";

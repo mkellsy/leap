@@ -1,4 +1,4 @@
-export interface AuthContext {
+export interface Certificate {
     ca: string;
     key: string;
     cert: string;

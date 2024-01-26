@@ -6,49 +6,22 @@ This exposes a method to interact with LEAP enabled devices. This requires the c
 ## API
 Pairing a processor or bridge.
 ```js
-import { createSecureContext } from "tls";
-import { Pairing } from "@mkellsy/leap";
+import { Connection } from "@mkellsy/leap";
 
-const pairing = new Pairing(
-    "192.168.123.5",
-    8083,
-    createSecureContext({ ca, key, cert })
-);
+const connection = new Connection("192.168.123.5");
 
-pairing.once("Message", (response: Record<string, any>) => {
-    if (response.Body.Status.Permissions.includes("PhysicalAccess")) {
-        // physical access gained
-    } else {
-        // no physical access
-    }
+connection.connect().then(() => {
+    connection.authenticate(request).then((certificate) => {
+        // certificate can be used to make a secure connection
+    });
 });
-
-await pairing.connect();
-```
-
-Fetch access keys (after physical access)
-```js
-this.pairing.once("Message", (response: Record<string, any>) => {
-    /*
-    ca: response.Body.SigningResult.RootCertificate,
-    cert: response.Body.SigningResult.Certificate,
-    key: pki.privateKeyToPem(csr.key),
-    */
-});
-
-this.pairing.pair(csr.cert);
 ```
 
 Connect to the processor (using the certificate from pairing)
 ```js
-import { createSecureContext } from "tls";
 import { Connection } from "@mkellsy/leap";
 
-const connection = new Connection(
-    "192.168.123.5",
-    8081,
-    createSecureContext({ ca, key, cert })
-);
+const connection = new Connection("192.168.123.5", certificate);
 ```
 
 Making a request
