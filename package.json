@@ -1,5 +1,5 @@
 {
-    "version": "1.5.0",
+    "version": "1.7.1",
     "name": "@mkellsy/leap",
     "displayName": "LEAP",
     "description": "Lutron LEAP protocol",
@@ -16,11 +16,11 @@
         "authority"
     ],
     "scripts": {
-        "build": "rm -fR ./lib && tsc --project tsconfig.json",
+        "build": "./build",
         "prepublishOnly": "npm run build"
     },
     "dependencies": {
-        "@mkellsy/event-emitter": "^1.3.1",
+        "@mkellsy/event-emitter": "^1.4.1",
         "bson": "5.5.1",
         "node-forge": "^1.3.1",
         "uuid": "^9.0.1"
@@ -31,6 +31,9 @@
         "@types/node": "^20.10.6",
         "@types/node-forge": "^1.3.11",
         "@types/uuid": "^9.0.7",
+        "colors": "^1.4.0",
+        "esbuild": "^0.20.2",
+        "js-logger": "^1.6.1",
         "typescript": "^5.3.3"
     }
 }
