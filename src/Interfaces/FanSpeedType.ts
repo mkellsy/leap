@@ -1,1 +1,1 @@
-export type FanSpeedType = "High" | "MediumHigh" | "Medium" | "Low" | "Off";
+export type FanSpeedType = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
