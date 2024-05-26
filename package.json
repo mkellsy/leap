@@ -16,7 +16,7 @@
         "authority"
     ],
     "scripts": {
-        "build": "./build",
+        "build": "node ./build",
         "prepublishOnly": "npm run build"
     },
     "dependencies": {
