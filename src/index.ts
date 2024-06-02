@@ -54,6 +54,7 @@ export { ResponseStatus } from "./Interfaces/ResponseStatus";
 
 export { TaggedResponse } from "./Interfaces/TaggedResponse";
 export { TiltAssignment } from "./Interfaces/TiltAssignment";
+export { Timeclock } from "./Interfaces/Timeclock";
 export { TuningSetting } from "./Interfaces/TuningSetting";
 
 export { VirtualButton } from "./Interfaces/VirtualButton";

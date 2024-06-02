@@ -23,6 +23,7 @@ import { PresetAssignment } from "./PresetAssignment";
 import { ProgrammingModel } from "./ProgrammingModel";
 import { Project } from "./Project";
 import { TiltAssignment } from "./TiltAssignment";
+import { Timeclock } from "./Timeclock";
 import { VirtualButton } from "./VirtualButton";
 import { Zone } from "./Zone";
 import { ZoneStatus } from "./ZoneStatus";
@@ -76,6 +77,8 @@ export type BodyType =
     | Project[]
     | TiltAssignment
     | TiltAssignment[]
+    | Timeclock
+    | Timeclock[]
     | VirtualButton
     | VirtualButton[]
     | Zone
