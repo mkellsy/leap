@@ -1,80 +1,84 @@
-import { Project } from "./Project";
-import { Preset } from "./Preset";
-import { AreaScene } from "./AreaScene";
-import { LinkNode } from "./LinkNode";
-import { Zone } from "./Zone";
 import { Area } from "./Area";
-import { ControlStation } from "./ControlStation";
+import { AreaScene } from "./AreaScene";
 import { AreaStatus } from "./AreaStatus";
-import { DeviceStatus } from "./DeviceStatus";
-import { Device } from "./Device";
-import { ZoneStatus } from "./ZoneStatus";
-import { PingResponse } from "./PingResponse";
+import { Authentication } from "./Authentication";
+import { Button } from "./Button";
 import { ButtonGroup } from "./ButtonGroup";
 import { ButtonGroupExpanded } from "./ButtonGroupExpanded";
-import { Button } from "./Button";
 import { ButtonStatus } from "./ButtonStatus";
-import { OccupancyGroupStatus } from "./OccupancyGroupStatus";
-import { OccupancyGroup } from "./OccupancyGroup";
 import { ClientSetting } from "./ClientSetting";
-import { VirtualButton } from "./VirtualButton";
-import { ProgrammingModel } from "./ProgrammingModel";
-import { PresetAssignment } from "./PresetAssignment";
+import { ControlStation } from "./ControlStation";
+import { Device } from "./Device";
+import { DeviceStatus } from "./DeviceStatus";
 import { DimmedLevelAssignment } from "./DimmedLevelAssignment";
-import { FanSpeedAssignment } from "./FanSpeedAssignment";
-import { TiltAssignment } from "./TiltAssignment";
 import { ExceptionDetail } from "./ExceptionDetail";
+import { FanSpeedAssignment } from "./FanSpeedAssignment";
+import { LinkNode } from "./LinkNode";
+import { OccupancyGroup } from "./OccupancyGroup";
+import { OccupancyGroupStatus } from "./OccupancyGroupStatus";
+import { PhysicalAccess } from "./PhysicalAccess";
+import { PingResponse } from "./PingResponse";
+import { Preset } from "./Preset";
+import { PresetAssignment } from "./PresetAssignment";
+import { ProgrammingModel } from "./ProgrammingModel";
+import { Project } from "./Project";
+import { TiltAssignment } from "./TiltAssignment";
+import { VirtualButton } from "./VirtualButton";
+import { Zone } from "./Zone";
+import { ZoneStatus } from "./ZoneStatus";
 
 export type BodyType =
-    | Project
-    | Project[]
-    | Preset
-    | Preset[]
-    | AreaScene
-    | AreaScene[]
-    | LinkNode
-    | LinkNode[]
-    | Zone
-    | Zone[]
     | Area
     | Area[]
-    | ControlStation
-    | ControlStation[]
+    | AreaScene
+    | AreaScene[]
     | AreaStatus
     | AreaStatus[]
-    | DeviceStatus
-    | DeviceStatus[]
-    | Device
-    | Device[]
-    | ZoneStatus
-    | ZoneStatus[]
-    | PingResponse
-    | PingResponse[]
+    | Authentication
+    | Button
+    | Button[]
     | ButtonGroup
     | ButtonGroup[]
     | ButtonGroupExpanded
     | ButtonGroupExpanded[]
-    | Button
-    | Button[]
     | ButtonStatus
     | ButtonStatus[]
-    | OccupancyGroupStatus
-    | OccupancyGroupStatus[]
-    | OccupancyGroup
-    | OccupancyGroup[]
     | ClientSetting
     | ClientSetting[]
-    | VirtualButton
-    | VirtualButton[]
-    | ProgrammingModel
-    | ProgrammingModel[]
-    | PresetAssignment
-    | PresetAssignment[]
+    | ControlStation
+    | ControlStation[]
+    | Device
+    | Device[]
+    | DeviceStatus
+    | DeviceStatus[]
     | DimmedLevelAssignment
     | DimmedLevelAssignment[]
+    | ExceptionDetail
+    | ExceptionDetail[]
     | FanSpeedAssignment
     | FanSpeedAssignment[]
+    | LinkNode
+    | LinkNode[]
+    | OccupancyGroup
+    | OccupancyGroup[]
+    | OccupancyGroupStatus
+    | OccupancyGroupStatus[]
+    | PhysicalAccess
+    | PingResponse
+    | PingResponse[]
+    | Preset
+    | Preset[]
+    | PresetAssignment
+    | PresetAssignment[]
+    | ProgrammingModel
+    | ProgrammingModel[]
+    | Project
+    | Project[]
     | TiltAssignment
     | TiltAssignment[]
-    | ExceptionDetail
-    | ExceptionDetail[];
+    | VirtualButton
+    | VirtualButton[]
+    | Zone
+    | Zone[]
+    | ZoneStatus
+    | ZoneStatus[];

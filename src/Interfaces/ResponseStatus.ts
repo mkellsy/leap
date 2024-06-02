@@ -1,5 +1,8 @@
 export class ResponseStatus {
-    constructor(public message: string, public code?: number) {}
+    constructor(
+        public message: string,
+        public code?: number,
+    ) {}
 
     static fromString(value: string): ResponseStatus {
         const parts = value.split(" ", 2);

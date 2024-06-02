@@ -17,7 +17,8 @@ export class Response {
 
     static parse(value: string): Response {
         const payload = JSON.parse(value);
-        const status = payload.Header.StatusCode == null ? undefined : ResponseStatus.fromString(payload.Header.StatusCode);
+        const status =
+            payload.Header.StatusCode == null ? undefined : ResponseStatus.fromString(payload.Header.StatusCode);
 
         const header: ResponseHeader = Object.assign({}, payload.Header, {
             StatusCode: status,

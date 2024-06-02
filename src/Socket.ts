@@ -1,5 +1,5 @@
 import { EventEmitter } from "@mkellsy/event-emitter";
-import { connect, createSecureContext, SecureContext, TLSSocket } from "tls";
+import { connect, createSecureContext, TLSSocket } from "tls";
 
 import { Certificate } from "./Interfaces/Certificate";
 import { Message } from "./Interfaces/Message";

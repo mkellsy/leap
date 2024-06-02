@@ -1,7 +1,7 @@
 import { Response } from "./Response";
 
 export interface Subscription {
-    url: string,
+    url: string;
     listener: (response: any) => void;
     callback: (r: Response) => void;
 }

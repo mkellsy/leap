@@ -5,12 +5,14 @@ import { BSON } from "bson";
 import { pki } from "node-forge";
 import { v4 } from "uuid";
 
+import { Authentication } from "./Interfaces/Authentication";
 import { BufferedResponse } from "./Interfaces/BufferedResponse";
 import { Certificate } from "./Interfaces/Certificate";
 import { CertificateRequest } from "./Interfaces/CertificateRequest";
 import { ExceptionDetail } from "./Interfaces/ExceptionDetail";
 import { InflightMessage } from "./Interfaces/InflightMessage";
 import { Message } from "./Interfaces/Message";
+import { PhysicalAccess } from "./Interfaces/PhysicalAccess";
 import { Response } from "./Interfaces/Response";
 import { RequestType } from "./Interfaces/RequestType";
 import { Socket } from "./Socket";
@@ -45,7 +47,7 @@ export class Connection extends BufferedResponse<{
             ca: "",
             cert: "",
             key: "",
-            ...(certificate != null ? certificate : this.authorityCertificate())
+            ...(certificate != null ? certificate : this.authorityCertificate()),
         };
     }
 
@@ -134,12 +136,12 @@ export class Connection extends BufferedResponse<{
 
             const timeout = setTimeout(() => reject(new Error("Authentication timeout exceeded")), 5_000);
 
-            this.once("Message", (response: Record<string, any>) => {
+            this.once("Message", (response: Response) => {
                 clearTimeout(timeout);
 
                 resolve({
-                    ca: response.Body.SigningResult.RootCertificate,
-                    cert: response.Body.SigningResult.Certificate,
+                    ca: (response.Body as Authentication).SigningResult.RootCertificate,
+                    cert: (response.Body as Authentication).SigningResult.Certificate,
                     key: pki.privateKeyToPem(csr.key),
                 });
             });
@@ -148,7 +150,7 @@ export class Connection extends BufferedResponse<{
         });
     }
 
-    public async update<T>(url: string, body: any): Promise<T> {
+    public async update<T>(url: string, body: Record<string, unknown>): Promise<T> {
         if (!this.secure) {
             throw new Error("Only available for secure connections");
         }
@@ -163,7 +165,7 @@ export class Connection extends BufferedResponse<{
         return response.Body as T;
     }
 
-    public async command(url: string, command: any): Promise<void> {
+    public async command(url: string, command: Record<string, unknown>): Promise<void> {
         if (!this.secure) {
             throw new Error("Only available for secure connections");
         }
@@ -182,7 +184,11 @@ export class Connection extends BufferedResponse<{
 
         this.sendRequest(tag, "SubscribeRequest", url).then((response: Response) => {
             if (response.Header.StatusCode != null && response.Header.StatusCode.isSuccessful()) {
-                this.subscriptions.set(tag, { url, listener, callback: (response: Response) => listener(response.Body as T) });
+                this.subscriptions.set(tag, {
+                    url,
+                    listener,
+                    callback: (response: Response) => listener(response.Body as T),
+                });
             }
         });
     }
@@ -197,7 +203,12 @@ export class Connection extends BufferedResponse<{
         this.requests.clear();
     }
 
-    private async sendRequest(tag: string, requestType: RequestType, url: string, body?: Record<string, unknown>): Promise<Response> {
+    private async sendRequest(
+        tag: string,
+        requestType: RequestType,
+        url: string,
+        body?: Record<string, unknown>,
+    ): Promise<Response> {
         if (this.requests.has(tag)) {
             const request = this.requests.get(tag)!;
 
@@ -302,8 +313,8 @@ export class Connection extends BufferedResponse<{
         return new Promise((resolve, reject) => {
             const timeout = setTimeout(() => reject(new Error("Physical timeout exceeded")), 60_000);
 
-            this.once("Message", (response: Record<string, any>) => {
-                if (response.Body.Status.Permissions.includes("PhysicalAccess")) {
+            this.once("Message", (response: Response) => {
+                if ((response.Body as PhysicalAccess).Status.Permissions.includes("PhysicalAccess")) {
                     clearTimeout(timeout);
 
                     return resolve();
@@ -311,6 +322,6 @@ export class Connection extends BufferedResponse<{
 
                 return reject(new Error("Unknown pairing error"));
             });
-        })
+        });
     }
 }
