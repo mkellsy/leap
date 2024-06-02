@@ -35,4 +35,6 @@ export type MessageType =
     | "OneDimmedLevelAssignmentDefinition"
     | "OneFanSpeedAssignmentDefinition"
     | "OneTiltAssignmentDefinition"
+    | "OneTimeclockStatus"
+    | "MultipleTimeclockStatus"
     | "ExceptionDetail";
