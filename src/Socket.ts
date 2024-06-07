@@ -4,6 +4,9 @@ import { connect, createSecureContext, TLSSocket } from "tls";
 import { Certificate } from "./Interfaces/Certificate";
 import { Message } from "./Interfaces/Message";
 
+/**
+ * Creates a connections underlying socket.
+ */
 export class Socket extends EventEmitter<{
     Error: (error: Error) => void;
     Data: (data: Buffer) => void;
@@ -15,6 +18,13 @@ export class Socket extends EventEmitter<{
     private readonly port: number;
     private readonly certificate: Certificate;
 
+    /**
+     * Creates a socket.
+     *
+     * @param host The IP address of the device.
+     * @param port The port the device listenes on.
+     * @param certificate An authentication certificate.
+     */
     constructor(host: string, port: number, certificate: Certificate) {
         super();
 
@@ -23,6 +33,11 @@ export class Socket extends EventEmitter<{
         this.certificate = certificate;
     }
 
+    /**
+     * Establishes a connection to the device.
+     *
+     * @returns A connection protocol.
+     */
     public connect(): Promise<string> {
         return new Promise((resolve, reject) => {
             const connection = connect(this.port, this.host, {
@@ -49,11 +64,19 @@ export class Socket extends EventEmitter<{
         });
     }
 
+    /**
+     * Disconnects from a device.
+     */
     public disconnect(): void {
         this.connection?.end();
         this.connection?.destroy();
     }
 
+    /**
+     * Writes a message to the connection.
+     *
+     * @param message A message to write.
+     */
     public write(message: Message): Promise<void> {
         return new Promise((resolve, reject) => {
             this.connection?.write(`${JSON.stringify(message)}\n`, (error) => {
@@ -66,14 +89,23 @@ export class Socket extends EventEmitter<{
         });
     }
 
+    /*
+     * Listens for data from the socket.
+     */
     private onSocketData = (data: Buffer): void => {
         this.emit("Data", data);
     };
 
+    /*
+     * Listenes for discrete disconects from the socket.
+     */
     private onSocketEnd = (): void => {
         this.emit("Disconnect");
     };
 
+    /*
+     * Listenes for any errors from the socket.
+     */
     private onSocketError = (error: Error): void => {
         this.emit("Error", error);
     };
