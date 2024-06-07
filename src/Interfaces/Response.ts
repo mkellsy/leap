@@ -6,17 +6,31 @@ import { MessageType } from "./MessageType";
 import { ResponseHeader } from "./ResponseHeader";
 import { ResponseStatus } from "./ResponseStatus";
 
+/**
+ * Defines a processor response.
+ */
 export class Response {
     public CommuniqueType?: RequestType;
     public Body?: Body.BodyType;
     public Header: ResponseHeader;
 
+    /**
+     * Creates a new response object.
+     */
     constructor() {
         this.Header = new ResponseHeader();
     }
 
+    /**
+     * Parses complete responses to a response object.
+     *
+     * @param value The assembled response.
+     *
+     * @returns Returns a response object.
+     */
     static parse(value: string): Response {
         const payload = JSON.parse(value);
+
         const status =
             payload.Header.StatusCode == null ? undefined : ResponseStatus.fromString(payload.Header.StatusCode);
 

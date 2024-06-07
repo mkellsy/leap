@@ -1,3 +1,6 @@
+/**
+ * List of available request types.
+ */
 export type RequestType =
     | "CreateRequest"
     | "CreateResponse"

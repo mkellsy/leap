@@ -1,3 +1,6 @@
+/**
+ * Defines the available message types.
+ */
 export type MessageType =
     | "OneProjectDefinition"
     | "OnePresetDefinition"

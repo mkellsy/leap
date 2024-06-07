@@ -1,3 +1,6 @@
+/**
+ * Available programming mode types.
+ */
 export type ProgrammingModelType =
     | "SingleActionProgrammingModel"
     | "SingleSceneRaiseProgrammingModel"

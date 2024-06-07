@@ -29,6 +29,9 @@ import { VirtualButton } from "./VirtualButton";
 import { Zone } from "./Zone";
 import { ZoneStatus } from "./ZoneStatus";
 
+/**
+ * Response body types
+ */
 export type BodyType =
     | Area
     | Area[]
