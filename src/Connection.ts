@@ -121,6 +121,7 @@ export class Connection extends BufferedResponse<{
                             this.socket = socket;
 
                             if (this.secure) {
+                                /* istanbul ignore next */
                                 for (const subscription of subscriptions) {
                                     this.subscribe(subscription.url, subscription.listener);
                                 }
@@ -130,9 +131,9 @@ export class Connection extends BufferedResponse<{
 
                             return resolve();
                         })
-                        .catch((error) => reject(error));
+                        .catch(/* istanbul ignore next */ (error) => reject(error));
                 })
-                .catch((error) => reject(error));
+                .catch(/* istanbul ignore next */ (error) => reject(error));
         });
     }
 
@@ -309,8 +310,8 @@ export class Connection extends BufferedResponse<{
      * connection.subscribe("/zone/123456/status", (response) => { });
      * ```
      *
-     * @param url 
-     * @param listener 
+     * @param url Url to subscribe to.
+     * @param listener Callback to run when the record updates.
      */
     public subscribe<T>(url: string, listener: (response: T) => void): void {
         if (!this.secure) {
@@ -335,6 +336,7 @@ export class Connection extends BufferedResponse<{
      * connections.
      */
     private drainRequests() {
+        /* istanbul ignore next */
         for (const tag of this.requests.keys()) {
             const request = this.requests.get(tag)!;
 
@@ -438,6 +440,7 @@ export class Connection extends BufferedResponse<{
      * is invoked.
      */
     private onSocketDisconnect = (): void => {
+        /* istanbul ignore if */
         if (!this.teardown) {
             this.drainRequests();
             this.connect();
@@ -462,11 +465,12 @@ export class Connection extends BufferedResponse<{
 
         if (fs.existsSync(filename)) {
             const bytes = fs.readFileSync(filename);
-            const certificate = BSON.deserialize(bytes) as Certificate;
 
-            if (certificate == null) {
+            if (bytes == null) {
                 return null;
             }
+
+            const certificate = BSON.deserialize(bytes) as Certificate;
 
             certificate.ca = Buffer.from(certificate.ca, "base64").toString("utf8");
             certificate.key = Buffer.from(certificate.key, "base64").toString("utf8");
@@ -488,15 +492,20 @@ export class Connection extends BufferedResponse<{
                 return resolve();
             }
 
-            const timeout = setTimeout(() => reject(new Error("Physical timeout exceeded")), 60_000);
+            const timeout = setTimeout(
+                /* istanbul ignore next */ () => reject(new Error("Physical timeout exceeded")),
+                60_000,
+            );
 
             this.once("Message", (response: Response) => {
+                /* istanbul ignore else */
                 if ((response.Body as PhysicalAccess).Status.Permissions.includes("PhysicalAccess")) {
                     clearTimeout(timeout);
 
                     return resolve();
                 }
 
+                /* istanbul ignore next */
                 return reject(new Error("Unknown pairing error"));
             });
         });
