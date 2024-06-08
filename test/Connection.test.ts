@@ -171,7 +171,7 @@ describe("Connection", () => {
                 expect(reachable).to.be.true;
 
                 expect(reachableStub.timeout).to.equal(1000);
-                expect(reachableStub.port).to.equal(8081);
+                expect(reachableStub.port).to.equal(8083);
                 expect(reachableStub.host).to.equal("HOST");
 
                 expect(reachableStub.destroy).to.be.called;
@@ -187,7 +187,7 @@ describe("Connection", () => {
                 expect(reachable).to.be.false;
 
                 expect(reachableStub.timeout).to.equal(1000);
-                expect(reachableStub.port).to.equal(8081);
+                expect(reachableStub.port).to.equal(8083);
                 expect(reachableStub.host).to.equal("HOST");
 
                 expect(reachableStub.destroy).to.be.called;
@@ -203,7 +203,7 @@ describe("Connection", () => {
                 expect(reachable).to.be.false;
 
                 expect(reachableStub.timeout).to.equal(1000);
-                expect(reachableStub.port).to.equal(8081);
+                expect(reachableStub.port).to.equal(8083);
                 expect(reachableStub.host).to.equal("HOST");
 
                 expect(reachableStub.destroy).to.be.called;
@@ -221,7 +221,7 @@ describe("Connection", () => {
                 .connect()
                 .then(() => {
                     expect(optionsStub.host).to.equal("HOST");
-                    expect(optionsStub.port).to.equal(8083);
+                    expect(optionsStub.port).to.equal(8081);
                     expect(optionsStub.certificate.ca).to.equal("ROOT");
                     expect(optionsStub.certificate.cert).to.equal("CERTIFICATE");
                     expect(optionsStub.certificate.key).to.equal("PUBLIC_KEY");
@@ -247,7 +247,7 @@ describe("Connection", () => {
                 .connect()
                 .then(() => {
                     expect(optionsStub.host).to.equal("HOST");
-                    expect(optionsStub.port).to.equal(8081);
+                    expect(optionsStub.port).to.equal(8083);
 
                     done();
                 })

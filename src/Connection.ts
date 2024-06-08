@@ -19,8 +19,8 @@ import { RequestType } from "./Interfaces/RequestType";
 import { Socket } from "./Socket";
 import { Subscription } from "./Interfaces/Subscription";
 
-const SOCKET_PORT = 8081;
-const SECURE_SOCKET_PORT = 8083;
+const SOCKET_PORT = 8083;
+const SECURE_SOCKET_PORT = 8081;
 const REACHABLE_TIMEOUT = 1_000;
 
 /**
@@ -106,7 +106,7 @@ export class Connection extends BufferedResponse<{
             this.socket = undefined;
 
             const subscriptions = [...this.subscriptions.values()];
-            const socket = new Socket(this.host, !this.secure ? SOCKET_PORT : SECURE_SOCKET_PORT, this.certificate);
+            const socket = new Socket(this.host, this.secure ? SECURE_SOCKET_PORT : SOCKET_PORT, this.certificate);
 
             socket.on("Data", this.onSocketData);
             socket.on("Error", this.onSocketError);
