@@ -9,8 +9,8 @@ module.exports = {
     tempDirectory: "node_modules/.cache/nyc_output",
     "report-dir": "coverage",
     "check-coverage": true,
-    statements: 60,
-    branches: 43,
-    functions: 53,
-    lines: 59,
+    statements: 59,
+    branches: 42,
+    functions: 51,
+    lines: 58,
 };

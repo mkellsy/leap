@@ -121,7 +121,6 @@ export class Connection extends BufferedResponse<{
                             this.socket = socket;
 
                             if (this.secure) {
-                                /* istanbul ignore next */
                                 for (const subscription of subscriptions) {
                                     this.subscribe(subscription.url, subscription.listener);
                                 }
@@ -131,9 +130,9 @@ export class Connection extends BufferedResponse<{
 
                             return resolve();
                         })
-                        .catch(/* istanbul ignore next */ (error) => reject(error));
+                        .catch((error) => reject(error));
                 })
-                .catch(/* istanbul ignore next */ (error) => reject(error));
+                .catch((error) => reject(error));
         });
     }
 
@@ -336,7 +335,6 @@ export class Connection extends BufferedResponse<{
      * connections.
      */
     private drainRequests() {
-        /* istanbul ignore next */
         for (const tag of this.requests.keys()) {
             const request = this.requests.get(tag)!;
 
@@ -440,7 +438,6 @@ export class Connection extends BufferedResponse<{
      * is invoked.
      */
     private onSocketDisconnect = (): void => {
-        /* istanbul ignore if */
         if (!this.teardown) {
             this.drainRequests();
             this.connect();
@@ -492,20 +489,15 @@ export class Connection extends BufferedResponse<{
                 return resolve();
             }
 
-            const timeout = setTimeout(
-                /* istanbul ignore next */ () => reject(new Error("Physical timeout exceeded")),
-                60_000,
-            );
+            const timeout = setTimeout(() => reject(new Error("Physical timeout exceeded")), 60_000);
 
             this.once("Message", (response: Response) => {
-                /* istanbul ignore else */
                 if ((response.Body as PhysicalAccess).Status.Permissions.includes("PhysicalAccess")) {
                     clearTimeout(timeout);
 
                     return resolve();
                 }
 
-                /* istanbul ignore next */
                 return reject(new Error("Unknown pairing error"));
             });
         });
