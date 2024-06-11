@@ -117,18 +117,24 @@ export class Connection extends BufferedResponse<{
                 .then((protocol) => {
                     this.physicalAccess(this.secure)
                         .then(() => {
+                            const waits: Promise<void>[] = [];
+
                             this.subscriptions.clear();
                             this.socket = socket;
 
                             if (this.secure) {
                                 for (const subscription of subscriptions) {
-                                    this.subscribe(subscription.url, subscription.listener);
+                                    waits.push(this.subscribe(subscription.url, subscription.listener));
                                 }
                             }
 
-                            this.emit("Connect", protocol);
+                            Promise.all(waits)
+                                .then(() => {
+                                    this.emit("Connect", protocol);
 
-                            return resolve();
+                                    resolve();
+                                })
+                                .catch((error) => reject(error));
                         })
                         .catch((error) => reject(error));
                 })
@@ -174,19 +180,21 @@ export class Connection extends BufferedResponse<{
                 return reject(new Error("Only available for secure connections"));
             }
 
-            this.sendRequest(tag, "ReadRequest", url).then((response) => {
-                const body = response.Body as T;
+            this.sendRequest(tag, "ReadRequest", url)
+                .then((response) => {
+                    const body = response.Body as T;
 
-                if (body == null) {
-                    return reject(new Error(`${url} no body`));
-                }
+                    if (body == null) {
+                        return reject(new Error(`${url} no body`));
+                    }
 
-                if (response.Body instanceof ExceptionDetail) {
-                    return reject(new Error(response.Body.Message));
-                }
+                    if (response.Body instanceof ExceptionDetail) {
+                        return reject(new Error(response.Body.Message));
+                    }
 
-                return resolve(response.Body as T);
-            });
+                    return resolve(response.Body as T);
+                })
+                .catch((error) => reject(error));
         });
     }
 
@@ -312,21 +320,27 @@ export class Connection extends BufferedResponse<{
      * @param url Url to subscribe to.
      * @param listener Callback to run when the record updates.
      */
-    public subscribe<T>(url: string, listener: (response: T) => void): void {
-        if (!this.secure) {
-            throw new Error("Only available for secure connections");
-        }
-
-        const tag = v4();
-
-        this.sendRequest(tag, "SubscribeRequest", url).then((response: Response) => {
-            if (response.Header.StatusCode != null && response.Header.StatusCode.isSuccessful()) {
-                this.subscriptions.set(tag, {
-                    url,
-                    listener,
-                    callback: (response: Response) => listener(response.Body as T),
-                });
+    public subscribe<T>(url: string, listener: (response: T) => void): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (!this.secure) {
+                return reject(new Error("Only available for secure connections"));
             }
+
+            const tag = v4();
+
+            this.sendRequest(tag, "SubscribeRequest", url)
+                .then((response: Response) => {
+                    if (response.Header.StatusCode != null && response.Header.StatusCode.isSuccessful()) {
+                        this.subscriptions.set(tag, {
+                            url,
+                            listener,
+                            callback: (response: Response) => listener(response.Body as T),
+                        });
+                    }
+
+                    resolve();
+                })
+                .catch((error) => reject(error));
         });
     }
 
